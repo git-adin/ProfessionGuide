@@ -19,6 +19,12 @@ function ns.SpellIcon(id)
     if not icon then local _,_,texture=ns.Safe(GetSpellInfo,id); icon=ns.ValidIcon(texture) end
     return icon or (ns.RecipeIcons and ns.RecipeIcons[id])
 end
+function ns.RecipeIcon(id)
+    -- Forever can return a valid default/logo texture for legacy recipe spells.
+    -- Prefer the mapped recipe artwork; numeric validity alone cannot identify
+    -- these placeholders. Profession spells still use their live client icons.
+    return ns.ValidIcon(ns.RecipeIcons and ns.RecipeIcons[id]) or ns.SpellIcon(id)
+end
 function ns.ProfessionIcon(slug)
     local meta=ns.Professions[slug]
     local skill=ns.player and ns.player.professions[slug]
@@ -54,7 +60,7 @@ function ns.StepIcon(slug,step)
     for _,s in ipairs(ns.Guides[slug].steps) do
         if s.from<=step.from and s.to>=step.to then
             for _,r in ipairs(s.recipes or {}) do
-                local icon=ns.SpellIcon(r.spell)
+                local icon=ns.RecipeIcon(r.spell)
                 if icon then return icon end
             end
             break

@@ -313,4 +313,16 @@ class AddonTests(unittest.TestCase):
             assert(ns.recipeIcon.texture==ns.ProfessionIcon('mining'))
             assert(not tostring(ns.recipeIcon.texture):find('QuestionMark'))''')
 
+    def test_recipe_art_overrides_valid_placeholder_spell_texture(self):
+        self.check('''C_Spell={GetSpellTexture=function() return 999999 end}
+            skills[1].rank=64; ns.Refresh(); ns.SetTarget(120); ns.Render()
+            assert(ns.recipeIcon.texture=='Interface\\\\Icons\\\\inv_potion_70')
+            assert(ns.routeButtons[1].icon.texture==ns.RecipeIcons[2331])
+            assert(ns.routeButtons[2].icon.texture==ns.RecipeIcons[2334])
+            ns.routeButtons[3]:GetScript('OnClick')(ns.routeButtons[3])
+            assert(ns.recipeIcon.texture==ns.RecipeIcons[3171])
+            assert(ns.ProfessionIcon('alchemy')==999999)
+            assert(ns.RecipeIcon(987654321)==999999) -- unmapped recipes still use APIs
+        ''')
+
 if __name__=='__main__': unittest.main(verbosity=2)

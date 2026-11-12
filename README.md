@@ -1,4 +1,4 @@
-# ProfessionGuide 0.2.1
+# ProfessionGuide 0.2.2
 
 An independent WoW Forever addon (Interface 16001) with character-aware profession
 routes and optional, explicit exports to ItemFarmingTool. No addon dependency,
@@ -34,6 +34,8 @@ materials and main actions. Icons use the client's spell/item APIs, with legacy
 fallbacks and built-in profession/recipe texture paths. Item icons can resolve
 before their full tooltip data is cached; unavailable items refresh after their
 data arrives. No icon images are downloaded or bundled with the addon.
+Recipe artwork takes priority over spell textures because Forever can return a
+generic logo for legacy recipe spell IDs.
 
 | Command | Action |
 | --- | --- |

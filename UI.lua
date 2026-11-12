@@ -196,7 +196,7 @@ function ns.RenderRecipe(slug,skill)
         local original=sourceStep(slug,step)
         for i,r in ipairs(recipes) do
             local recipe=original and original.recipes and original.recipes[i]
-            local recipeIcon=recipe and ns.SpellIcon(recipe.spell)
+            local recipeIcon=recipe and ns.RecipeIcon(recipe.spell)
             title[#title+1]=(i>1 and recipeIcon and ns.IconTag(recipeIcon,20) or "")..r.name
             if ns.plan then details[#details+1]="About "..r.crafts.." crafts" end
             if recipe then
