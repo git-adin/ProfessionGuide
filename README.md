@@ -1,4 +1,4 @@
-# ProfessionGuide 0.2.2
+# ProfessionGuide 0.2.3
 
 An independent WoW Forever addon (Interface 16001) with character-aware profession
 routes and optional, explicit exports to ItemFarmingTool. No addon dependency,
@@ -9,6 +9,8 @@ network access, library or developer tool is needed in game.
 Extract `dist/ProfessionGuide.zip` into `_forever_/Interface/AddOns/`. The resulting
 path must be `AddOns/ProfessionGuide/ProfessionGuide.toc`. Enable ProfessionGuide
 and type `/pg` after logging in.
+You can also click the book button beside the minimap to open or close the Workshop.
+Drag it around the minimap; its position and visibility are saved per character.
 
 1. Click the profession button to cycle through your learned professions.
 2. Enter the **profession skill** you want to reach (1–300), then click **Plan route**.
@@ -44,6 +46,9 @@ generic logo for legacy recipe spell IDs.
 | `/pg select first aid` | Select a detected profession |
 | `/pg target 150` | Save the selected profession's target; does not export |
 | `/pg reset` | Restore position and show window |
+| `/pg minimap` | Toggle minimap button visibility |
+| `/pg minimap show` / `/pg minimap hide` | Show / hide minimap button |
+| `/pg minimap reset` | Restore minimap button position and show it |
 
 ## Estimates and limitations
 

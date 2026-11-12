@@ -9,6 +9,15 @@ SlashCmdList = {}
 local methods = {}
 function methods:SetScript(key, value) self.scripts[key] = value end
 function methods:GetScript(key) return self.scripts[key] end
+function methods:HookScript(key,callback)
+    local previous=self.scripts[key]
+    self.scripts[key]=function(...) if previous then previous(...) end; callback(...) end
+end
+function methods:GetFrameLevel() return self.frameLevel or 1 end
+function methods:SetFrameLevel(level) self.frameLevel=level end
+function methods:GetEffectiveScale() return self.scale or 1 end
+function methods:GetCenter() return self.centerX or 0,self.centerY or 0 end
+function methods:SetHighlightTexture(texture) self.highlight=texture end
 function methods:RegisterEvent(key) self.events[key] = true end
 function methods:UnregisterEvent(key) self.events[key] = nil end
 function methods:SetSize(w, h) self.width, self.height = w, h end

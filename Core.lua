@@ -13,6 +13,9 @@ function ns.LoadSettings()
     ns.db.targets=targets
     if not ns.Professions[ns.db.selected] then ns.db.selected=nil end
     ns.db.hidden=ns.db.hidden~=false -- stay quiet until first /pg
+    ns.db.minimapButton=ns.db.minimapButton~=false
+    local angle=ns.db.minimapAngle
+    ns.db.minimapAngle=type(angle)=="number" and angle==angle and math.abs(angle)<math.huge and angle%360 or 140
     local p=ns.db.position
     local points={TOPLEFT=true,TOP=true,TOPRIGHT=true,LEFT=true,CENTER=true,RIGHT=true,
         BOTTOMLEFT=true,BOTTOM=true,BOTTOMRIGHT=true}
@@ -37,11 +40,23 @@ function ns.SetTarget(value)
     ns.db.targets[slug]=target
     return true,"Target saved. Review materials, then click Export if desired."
 end
+function ns.Toggle()
+    ns.db.hidden=not ns.db.hidden
+    ns.Refresh()
+end
 local function printMessage(message) print("|cff66d9b3ProfessionGuide:|r "..message) end
 function ns.Command(message)
     local command,rest=(message or ""):match("^%s*(%S*)%s*(.-)%s*$")
     command=command:lower()
     if command=="hide" then ns.db.hidden=true
+    elseif command=="minimap" then
+        rest=rest:lower()
+        if rest=="show" then ns.db.minimapButton=true
+        elseif rest=="hide" then ns.db.minimapButton=false
+        elseif rest=="reset" then ns.db.minimapAngle=140; ns.db.minimapButton=true
+        elseif rest=="" then ns.db.minimapButton=not ns.db.minimapButton
+        else printMessage("/pg minimap [show | hide | reset]"); return end
+        ns.UpdateMinimapButton()
     elseif command=="target" then
         local _,info=ns.SetTarget(rest); printMessage(info)
     elseif command=="select" then
@@ -51,7 +66,7 @@ function ns.Command(message)
     elseif command=="reset" then
         ns.db.position=nil; ns.db.hidden=false; ns.ApplyPosition()
     elseif command=="" or command=="show" then ns.db.hidden=false
-    else printMessage("/pg show | hide | select <profession> | target <1-300> | reset"); return end
+    else printMessage("/pg show | hide | select <profession> | target <1-300> | reset | minimap [show | hide | reset]"); return end
     ns.Refresh(); ns.Render(true)
 end
 local events=CreateFrame("Frame")
@@ -62,6 +77,7 @@ events:SetScript("OnEvent",function(self,event,name)
         if name==addon then ns.LoadSettings() end
     elseif event=="PLAYER_LOGIN" then
         ns.LoadSettings(); ns.player=ns.ReadCharacter(); ns.CreateUI()
+        ns.InitMinimapButton()
         SlashCmdList.PROFESSIONGUIDE=ns.Command
         SLASH_PROFESSIONGUIDE1,SLASH_PROFESSIONGUIDE2="/pg","/professionguide"
         for _,e in ipairs({"SKILL_LINES_CHANGED","CHAT_MSG_SKILL","PLAYER_LEVEL_UP","PLAYER_ENTERING_WORLD","BAG_UPDATE_DELAYED","TRADE_SKILL_CLOSE","GET_ITEM_INFO_RECEIVED"}) do self:RegisterEvent(e) end

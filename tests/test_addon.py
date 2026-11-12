@@ -6,7 +6,7 @@ sys.path.insert(0,str(ROOT.parent/'.tools'))
 sys.path.insert(0,str(ROOT/'.tools'))
 from lupa.lua51 import LuaRuntime
 
-FILES=['Data.lua','Routes.lua','Character.lua','Icons.lua','Planner.lua','Integration.lua','UI.lua','Core.lua']
+FILES=['Data.lua','Routes.lua','Character.lua','Icons.lua','Planner.lua','Integration.lua','UI.lua','Minimap.lua','Core.lua']
 
 class AddonTests(unittest.TestCase):
     def setUp(self):
@@ -324,5 +324,57 @@ class AddonTests(unittest.TestCase):
             assert(ns.ProfessionIcon('alchemy')==999999)
             assert(ns.RecipeIcon(987654321)==999999) -- unmapped recipes still use APIs
         ''')
+
+    def create_minimap(self):
+        self.check('''Minimap=CreateFrame('Frame',nil,UIParent); Minimap:SetSize(140,140)
+            Minimap.centerX,Minimap.centerY=100,100
+            GetCursorPosition=function() return cursorX or 200,cursorY or 100 end
+            ns.InitMinimapButton()''')
+
+    def test_minimap_toggle_never_exports_and_init_is_idempotent(self):
+        self.create_minimap()
+        self.check('''assert(ns.minimapButton:IsShown() and ns.db.hidden)
+            ItemFarmingToolDB={items={}}; writes=0
+            SlashCmdList.ITEMFARMINGTOOL=function() writes=writes+1 end
+            ns.SetTarget(120)
+            ns.minimapButton:GetScript('OnClick')(); assert(ns.frame:IsShown())
+            ns.minimapButton:GetScript('OnClick')(); assert(not ns.frame:IsShown())
+            local count=#frames; ns.InitMinimapButton(); assert(#frames==count)
+            assert(writes==0 and ns.minimapButton:GetScript('OnUpdate')==nil)
+            ns.minimapButton:GetScript('OnEnter')(ns.minimapButton)
+            ns.minimapButton:GetScript('OnLeave')()''')
+
+    def test_minimap_drag_scale_and_cleanup(self):
+        self.create_minimap()
+        self.check('''local b=ns.minimapButton
+            Minimap.scale=2; cursorX,cursorY=200,400
+            b:GetScript('OnDragStart')(b); assert(b:GetScript('OnUpdate'))
+            b:GetScript('OnUpdate')(); assert(math.abs(ns.db.minimapAngle-90)<0.001)
+            assert(math.abs(b.point[4])<0.001 and math.abs(b.point[5]-78)<0.001)
+            b:GetScript('OnDragStop')(b); assert(b:GetScript('OnUpdate')==nil)
+            local angle=ns.db.minimapAngle; b:GetScript('OnDragStart')(b)
+            Minimap.scale=0; b:GetScript('OnUpdate')(); assert(ns.db.minimapAngle==angle)
+            ns.Command('minimap hide'); assert(b:GetScript('OnUpdate')==nil and not b:IsShown())''')
+
+    def test_minimap_visibility_commands_and_saved_settings(self):
+        self.create_minimap()
+        self.check('''ns.Command('minimap hide'); assert(ns.db.minimapButton==false)
+            ns.db=nil; ns.LoadSettings(); ns.UpdateMinimapButton()
+            assert(not ns.minimapButton:IsShown())
+            ns.Command('minimap show'); assert(ns.minimapButton:IsShown())
+            ns.db.minimapAngle=15; ns.Command('minimap reset')
+            assert(ns.db.minimapAngle==140 and ns.db.minimapButton)
+            ns.Command('minimap'); assert(not ns.minimapButton:IsShown())
+            ns.Command('minimap invalid'); assert(not ns.minimapButton:IsShown())
+            ns.db.minimapAngle=0/0; ns.db=nil; ns.LoadSettings(); assert(ns.db.minimapAngle==140)''')
+
+    def test_minimap_resize_and_square_shape(self):
+        self.create_minimap()
+        self.check('''ns.db.minimapAngle=45; GetMinimapShape=function() return 'SQUARE' end
+            Minimap:SetSize(200,200); Minimap:GetScript('OnSizeChanged')(Minimap)
+            assert(math.abs(ns.minimapButton.point[4]-108)<0.001)
+            assert(math.abs(ns.minimapButton.point[5]-108)<0.001)
+            GetMinimapShape=nil; ns.PositionMinimapButton()
+            assert(ns.minimapButton.point[4]<108)''')
 
 if __name__=='__main__': unittest.main(verbosity=2)

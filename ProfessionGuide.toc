@@ -2,7 +2,7 @@
 ## Title: ProfessionGuide
 ## Notes: Character-aware profession routes and opt-in material planning for Forever.
 ## Author: git-adin
-## Version: 0.2.2
+## Version: 0.2.3
 ## OptionalDeps: ItemFarmingTool
 ## SavedVariablesPerCharacter: ProfessionGuideDB
 ## X-License: GPL-3.0-or-later
@@ -14,4 +14,5 @@ Icons.lua
 Planner.lua
 Integration.lua
 UI.lua
+Minimap.lua
 Core.lua
