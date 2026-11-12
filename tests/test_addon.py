@@ -12,7 +12,7 @@ class AddonTests(unittest.TestCase):
     def setUp(self):
         self.lua=LuaRuntime(unpack_returned_tuples=True)
         self.lua.execute((ROOT/'tests/wow_mock.lua').read_text())
-        self.lua.execute('''
+        self.lua.execute(r'''
             function UnitLevel() return level or 20 end
             function UnitFactionGroup() return 'Alliance' end
             skills={{skillID=171,name='Alchemy',rank=1,maxRank=75}}
@@ -21,7 +21,14 @@ class AddonTests(unittest.TestCase):
             GetItemCount=function(id) return owned and owned[id] or 0 end
             C_Item.GetItemCount=GetItemCount
             local mt=getmetatable(UIParent).__index
-            function mt:GetStringHeight() return 1000 end
+            function mt:GetStringHeight()
+                local value=self:GetText():gsub('|c%x%x%x%x%x%x%x%x',''):gsub('|r','')
+                local lines=0
+                for part in (value..'\n'):gmatch('(.-)\n') do
+                    lines=lines+math.max(1,math.ceil(#part*7/(self.width or 1000)))
+                end
+                return lines*14
+            end
             function mt:SetEnabled(value) self.enabled=value end
             UISpecialFrames={}
         ''')
@@ -186,5 +193,73 @@ class AddonTests(unittest.TestCase):
             assert(ift.Find(2447).goal==100 and ift.Find(2589).goal==7)
             assert(ift.Find(3371).goal==9); local total=#ift.db.items
             assert(ns.Export(ns.plan)); assert(#ift.db.items==total)''')
+
+    def test_workshop_recipe_selection_keeps_full_route_totals(self):
+        self.check('''skills[1].rank=65; ns.Refresh(); ns.SetTarget(120); ns.Render()
+            assert(#ns.route==2 and ns.recipeText:GetText()=='Elixir of Minor Fortitude')
+            local count=#ns.plan.materials
+            ns.routeButtons[2]:GetScript('OnClick')(ns.routeButtons[2])
+            assert(ns.recipeText:GetText()=='Elixir of Wisdom')
+            assert(ns.detailText:GetText():find('30 crafts'))
+            assert(#ns.plan.materials==count and ns.shoppingTitle:GetText():find('120'))
+            assert(ns.detailText:GetText():find('2 Briarthorn'))
+            Fire('BAG_UPDATE_DELAYED'); Tick()
+            assert(ns.recipeText:GetText()=='Elixir of Wisdom')''')
+
+    def test_workshop_advance_and_target_reset(self):
+        self.check('''skills[1].rank=65; ns.Refresh(); ns.SetTarget(120); ns.Render()
+            skills[1].rank=90; Fire('SKILL_LINES_CHANGED'); Tick()
+            assert(ns.selectedStep.from==90 and ns.recipeText:GetText()=='Elixir of Wisdom')
+            ns.SetTarget(150); ns.Render(); ns.routeButtons[3]:GetScript('OnClick')(ns.routeButtons[3])
+            assert(ns.recipeText:GetText()=='Fire Oil')
+            ns.SetTarget(120); ns.Render(); assert(ns.recipeText:GetText()=='Elixir of Wisdom')
+            assert(not ns.routeButtons[3]:IsShown())''')
+
+    def test_workshop_notes_and_clear_target(self):
+        self.check('''ns.Command('show'); ns.SetTarget(120); ns.Render()
+            ns.notesButton:GetScript('OnClick')()
+            assert(ns.showNotes and ns.notesText:IsShown() and not ns.recipeText:IsShown())
+            assert(ns.notesText:GetText():find('Ainethil'))
+            ns.notesButton:GetScript('OnClick')()
+            assert(not ns.showNotes and ns.recipeText:IsShown())
+            ns.clearButton:GetScript('OnClick')()
+            assert(ns.plan==nil and not ns.exportButton.enabled)
+            assert(ns.materialMessage:GetText():find('Choose a target'))
+            assert(not ns.materialRows[1]:IsShown())''')
+
+    def test_workshop_material_columns_and_async_icons(self):
+        self.check('''ns.Command('show'); ns.SetTarget(10); ns.Render()
+            owned={[3371]=20}; ns.Refresh()
+            for i,m in ipairs(ns.plan.materials) do
+                local row=ns.materialRows[i]
+                assert(row.need:GetText()==tostring(m.quantity))
+                if m.id==3371 then
+                    assert(row.have:GetText()=='20' and row.short:GetText():find('0'))
+                    itemData[3371]={name='Empty Vial',icon=987}
+                    Fire('GET_ITEM_INFO_RECEIVED',3371); Tick()
+                    assert(row.icon.texture==987)
+                    row:GetScript('OnEnter')(row); row:GetScript('OnLeave')()
+                end
+            end''')
+
+    def test_workshop_both_engineering_recipes_and_gathering(self):
+        self.check('''ns.Command('show')
+            skills={{skillID=202,name='Engineering',rank=135,maxRank=150}}; ns.Refresh()
+            ns.SetTarget(150); ns.Render()
+            assert(ns.recipeText:GetText():find('Heavy Blasting Powder'))
+            assert(ns.recipeText:GetText():find('Whirring Bronze Gizmo'))
+            skills={{skillID=186,name='Mining',rank=125,maxRank=150}}; ns.Refresh()
+            ns.SetTarget(175); ns.Render()
+            assert(ns.recipeText:GetText()=='Gathering route')
+            assert(ns.detailText:GetText():find('Thousand Needles'))
+            assert(#ns.plan.materials==0 and not ns.exportButton.enabled)''')
+
+    def test_workshop_complete_and_source_end_states(self):
+        self.check('''ns.Command('show'); ns.SetTarget(1); ns.Render()
+            assert(ns.recipeText:GetText()=='Target reached' and #ns.route==0)
+            skills={{skillID=197,name='Tailoring',rank=265,maxRank=300}}; ns.Refresh()
+            ns.SetTarget(300); ns.Render()
+            assert(ns.recipeText:GetText()=='No further source steps')
+            assert(ns.warningText:GetText():find('265') and not ns.exportButton.enabled)''')
 
 if __name__=='__main__': unittest.main(verbosity=2)

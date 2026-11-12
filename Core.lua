@@ -64,9 +64,10 @@ events:SetScript("OnEvent",function(self,event,name)
         ns.LoadSettings(); ns.player=ns.ReadCharacter(); ns.CreateUI()
         SlashCmdList.PROFESSIONGUIDE=ns.Command
         SLASH_PROFESSIONGUIDE1,SLASH_PROFESSIONGUIDE2="/pg","/professionguide"
-        for _,e in ipairs({"SKILL_LINES_CHANGED","CHAT_MSG_SKILL","PLAYER_LEVEL_UP","PLAYER_ENTERING_WORLD","BAG_UPDATE_DELAYED","TRADE_SKILL_CLOSE"}) do self:RegisterEvent(e) end
+        for _,e in ipairs({"SKILL_LINES_CHANGED","CHAT_MSG_SKILL","PLAYER_LEVEL_UP","PLAYER_ENTERING_WORLD","BAG_UPDATE_DELAYED","TRADE_SKILL_CLOSE","GET_ITEM_INFO_RECEIVED"}) do self:RegisterEvent(e) end
         ns.Refresh()
     elseif ns.db and ns.frame then
+        if event=="GET_ITEM_INFO_RECEIVED" and not (ns.itemRequested and ns.itemRequested[name]) then return end
         if ns.pending then return end
         ns.pending=true
         local function update() ns.pending=nil; ns.Refresh() end

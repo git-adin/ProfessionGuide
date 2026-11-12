@@ -1,4 +1,4 @@
-# ProfessionGuide 0.1.0
+# ProfessionGuide 0.2.0
 
 An independent WoW Forever addon (Interface 16001) with character-aware profession
 routes and optional, explicit exports to ItemFarmingTool. No addon dependency,
@@ -11,9 +11,13 @@ path must be `AddOns/ProfessionGuide/ProfessionGuide.toc`. Enable ProfessionGuid
 and type `/pg` after logging in.
 
 1. Click the profession button to cycle through your learned professions.
-2. Enter the **profession skill** you want to reach (1–300), then click **Apply target**.
-3. Review the route, character-level/rank requirements and material estimates.
-4. If ItemFarmingTool is loaded, click **Export materials to ItemFarmingTool** to
+2. Enter the **profession skill** you want to reach (1–300), then click **Plan route**.
+3. Select a step in the left route list to see its recipes, estimated crafts and
+   ingredients on the right. The shopping table always covers the entire target,
+   with separate **Have**, **Need** and **Short** columns and item tooltips.
+4. Open **Training & notes** for trainer locations, rank requirements and source
+   details. Warnings about the chosen route also appear above the shopping table.
+5. If ItemFarmingTool is loaded, click **Export to ItemFarmingTool** to
    add its material goals. Nothing is exported by login, changing targets,
    bag/skill updates, or reloading.
 
@@ -23,6 +27,8 @@ Fishing and Lockpicking are covered. Gathering guides show activities and zones
 instead of invented material quantities. Trainer pairs are Alliance / Horde.
 Targets and window position are saved per character. Drag the background/title to
 move the window; Close or Escape hides it. `/pg reset` restores the position.
+The Workshop window uses separate scrolling for the route list and recipe/shopping
+details. The selected step survives bag updates and advances when completed.
 
 | Command | Action |
 | --- | --- |

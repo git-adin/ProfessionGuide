@@ -19,7 +19,12 @@ function methods:GetHeight() return self.height end
 function methods:SetPoint(...) self.point = {...} end
 function methods:GetPoint() return unpack(self.point) end
 function methods:ClearAllPoints() self.point = nil end
-function methods:SetText(text) self.text = tostring(text) end
+function methods:SetText(text)
+    self.text = tostring(text)
+    if self.fontString then self.fontString:SetText(text) end
+end
+function methods:SetFontString(fontString) self.fontString = fontString end
+function methods:IsEnabled() return self.enabled ~= false end
 function methods:GetText() return self.text or "" end
 function methods:Show() self.shown = true end
 function methods:Hide()
