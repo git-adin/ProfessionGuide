@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 
 ROOT = Path(__file__).resolve().parents[1]
 SLUGS = ['alchemy','blacksmithing','enchanting','engineering','leatherworking','tailoring','first-aid','cooking']
-items, spells = {}, {}
+items, spells, recipe_icons = {}, {}, {}
 soups = {}
 for slug in SLUGS:
     soup = BeautifulSoup((ROOT / 'tools/.source-cache' / (slug+'.html')).read_bytes(), 'html.parser')
@@ -20,7 +20,11 @@ for slug in SLUGS:
         m = re.search(r'item=(\d+)', a['href'])
         if m: items[a.get_text(' ',strip=True)] = int(m[1])
         m = re.search(r'spell=(\d+)', a['href'])
-        if m: spells[a.get_text(' ',strip=True)] = int(m[1])
+        if m:
+            spells[a.get_text(' ',strip=True)] = int(m[1])
+            image=a.find('img',src=True)
+            icon=re.search(r'/([^/]+)\.(?:jpg|png)$',image['src']) if image else None
+            if icon: recipe_icons[int(m[1])]='Interface\\Icons\\'+icon[1]
 items.update({'Coarse Thread':2320,'Fine Thread':2321,'Silken Thread':4291,
     'Heavy Silken Thread':8343,'Rune Thread':14341,'Red Dye':2604,'Blue Dye':6260,
     'Green Dye':2605,'Black Dye':2325,'Salt':4289,'Refreshing Spring Water':159,
@@ -134,6 +138,8 @@ for slug,g in guides.items():
     output+=''.join('        '+lua(step)+',\n' for step in g['steps'])
     output+='    }},\n'
 output+='}\n'
+used_spells={r['spell'] for g in guides.values() for s in g['steps'] for r in s['recipes']}
+output+='ns.RecipeIcons = {\n'+''.join('    ['+str(k)+']='+json.dumps(v)+',\n' for k,v in sorted(recipe_icons.items()) if k in used_spells)+'}\n'
 (ROOT/'Data.lua').write_text(output,encoding='utf-8')
 for slug,g in guides.items(): print(slug,len(g['steps']),g['cap'])
 unknown=sorted({m['name'] for g in guides.values() for s in g['steps'] for r in s['recipes'] for m in r['materials'] if m['name'] not in items})

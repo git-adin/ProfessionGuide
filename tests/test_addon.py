@@ -6,7 +6,7 @@ sys.path.insert(0,str(ROOT.parent/'.tools'))
 sys.path.insert(0,str(ROOT/'.tools'))
 from lupa.lua51 import LuaRuntime
 
-FILES=['Data.lua','Routes.lua','Character.lua','Planner.lua','Integration.lua','UI.lua','Core.lua']
+FILES=['Data.lua','Routes.lua','Character.lua','Icons.lua','Planner.lua','Integration.lua','UI.lua','Core.lua']
 
 class AddonTests(unittest.TestCase):
     def setUp(self):
@@ -261,5 +261,56 @@ class AddonTests(unittest.TestCase):
             ns.SetTarget(300); ns.Render()
             assert(ns.recipeText:GetText()=='No further source steps')
             assert(ns.warningText:GetText():find('265') and not ns.exportButton.enabled)''')
+
+    def test_blizzard_spell_icons_modern_legacy_and_bundled_paths(self):
+        self.check('''C_Spell={GetSpellTexture=function() return 12345 end}
+            assert(ns.SpellIcon(2334)==12345)
+            C_Spell=nil; GetSpellTexture=function() return 54321 end
+            assert(ns.SpellIcon(2334)==54321)
+            GetSpellTexture=nil; GetSpellInfo=function() return 'Recipe',nil,45678 end
+            assert(ns.SpellIcon(2334)==45678)
+            GetSpellInfo=nil; assert(ns.SpellIcon(2334)==ns.RecipeIcons[2334])
+            for slug,g in pairs(ns.Guides) do
+                assert(ns.ProfessionIcon(slug):find('Interface'))
+                for _,s in ipairs(g.steps) do
+                    assert(ns.StepIcon(slug,s))
+                    for _,r in ipairs(s.recipes or {}) do assert(ns.RecipeIcons[r.spell],r.name) end
+                end
+            end''')
+
+    def test_profession_api_icon_survives_skill_line_merge(self):
+        self.check('''GetProfessions=function() return 1 end
+            GetProfessionInfo=function() return 'Alchemy',98765,1,75,nil,nil,171 end
+            ns.Refresh(); assert(ns.player.professions.alchemy.icon==98765)
+            assert(ns.ProfessionIcon('alchemy')==98765)
+            assert(ns.profButton:GetText():find('98765'))''')
+
+    def test_uncached_item_icon_apis_and_failed_lookup_fallbacks(self):
+        self.check('''C_Item.GetItemIconByID=function() return 1234 end
+            assert(ns.ItemIcon(3371)==1234)
+            C_Item.GetItemIconByID=function() error('Unsupported') end
+            GetItemIcon=function() return 5678 end; assert(ns.ItemIcon(3371)==5678)
+            GetItemIcon=nil; C_Item.GetItemIconByID=nil
+            C_Item.GetItemInfoInstant=function() return 3371,'Misc','Other','',9876 end
+            assert(ns.ItemIcon(3371)==9876)
+            C_Item.GetItemInfoInstant=nil
+            local requests=0; C_Item.RequestLoadItemDataByID=function() requests=requests+1 end
+            assert(ns.ItemIcon(999999)==nil); assert(ns.ItemIcon(999999)==nil)
+            assert(requests==1)
+            itemData[999999]={name='New item',icon=4567}; assert(ns.ItemIcon(999999)==4567)
+            assert(ns.ValidIcon(0)==nil and ns.ValidIcon('')==nil and ns.ValidIcon({})==nil)''')
+
+    def test_workshop_icons_follow_recipe_and_profession(self):
+        self.check('''skills[1].rank=65; ns.Refresh(); ns.SetTarget(120); ns.Render()
+            assert(ns.recipeIcon.texture==ns.RecipeIcons[2334])
+            assert(ns.routeButtons[1].icon.texture==ns.recipeIcon.texture)
+            ns.routeButtons[2]:GetScript('OnClick')(ns.routeButtons[2])
+            assert(ns.recipeIcon.texture==ns.RecipeIcons[3171])
+            C_Item.GetItemIconByID=function(id) return id+100000 end
+            ns.Render(); assert(ns.detailText:GetText():find('|T'))
+            for i,m in ipairs(ns.plan.materials) do assert(ns.materialRows[i].icon.texture==m.id+100000) end
+            skills={{skillID=186,name='Mining',rank=1,maxRank=75}}; ns.Refresh()
+            assert(ns.recipeIcon.texture==ns.ProfessionIcon('mining'))
+            assert(not tostring(ns.recipeIcon.texture):find('QuestionMark'))''')
 
 if __name__=='__main__': unittest.main(verbosity=2)

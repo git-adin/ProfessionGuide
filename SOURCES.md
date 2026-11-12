@@ -35,3 +35,9 @@ actual whole-craft ratio of three scraps. Fire Oil produces two per craft.
 Client compatibility was cross-checked against installed Forever addons' use of
 `C_SkillInfo`, legacy skill APIs and profession APIs, and ItemFarmingTool 0.2.2's
 actual command handler. This is compatibility evidence, not a live client test.
+
+Icon lookup signatures were checked against Blizzard's generated API definitions
+in the [UI source mirror](https://github.com/Gethe/wow-ui-source/tree/live/Interface/AddOns/Blizzard_APIDocumentationGenerated).
+Recipe fallback paths reference Blizzard icon names in the guide links. These
+are client texture references; no website images or Blizzard image files ship
+with the addon.

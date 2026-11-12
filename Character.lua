@@ -15,10 +15,12 @@ function ns.ReadCharacter()
         local name = safe(C_Spell and C_Spell.GetSpellName,meta.spell) or safe(GetSpellInfo,meta.spell)
         if name then names[name]=slug end
     end
-    local function add(id,name,rank,cap)
+    local function add(id,name,rank,cap,icon)
         local slug=ids[id] or names[name]
         if slug and type(rank)=="number" and type(cap)=="number" then
-            out.professions[slug]={name=name or ns.Professions[slug].name, rank=rank, cap=cap}
+            local previous=out.professions[slug]
+            out.professions[slug]={name=name or ns.Professions[slug].name, rank=rank, cap=cap,
+                icon=icon or (previous and previous.icon)}
         end
     end
     if GetProfessions and GetProfessionInfo then
@@ -26,8 +28,8 @@ function ns.ReadCharacter()
         -- These returns contain holes when primary professions are unlearned.
         for i=1,6 do
             if indices[i] then
-                local name,_,rank,cap,_,_,id=safe(GetProfessionInfo,indices[i])
-                add(id,name,rank,cap)
+                local name,icon,rank,cap,_,_,id=safe(GetProfessionInfo,indices[i])
+                add(id,name,rank,cap,icon)
             end
         end
     end

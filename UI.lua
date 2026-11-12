@@ -1,7 +1,9 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 local _, ns = ...
 local GOLD, MUTED, GREEN = "|cffdbbc75", "|cffb5b1a8", "|cff94c49e"
-local UNKNOWN = "Interface\\Icons\\INV_Misc_QuestionMark"
+local BOOK = "Interface\\Icons\\INV_Misc_Book_09"
+local BAG = "Interface\\Icons\\INV_Misc_Bag_10"
+local function actionIcon(name,label) return ns.IconTag("Interface\\Icons\\"..name)..label end
 local function text(parent, font, width, align)
     local label=parent:CreateFontString(nil,"OVERLAY",font or "GameFontHighlight")
     label:SetWidth(width); label:SetJustifyH(align or "LEFT"); label:SetJustifyV("TOP")
@@ -60,7 +62,9 @@ function ns.CreateUI()
         insets={left=3,right=3,top=3,bottom=3}})
     f:SetBackdropColor(0.065,0.078,0.095,1)
     f:SetBackdropBorderColor(0.40,0.36,0.27,1)
-    place(text(f,"GameFontNormalLarge",350),GOLD.."ProfessionGuide|r",20,18)
+    local emblem=f:CreateTexture(nil,"ARTWORK"); emblem:SetSize(24,24); emblem:SetPoint("TOPLEFT",20,-15)
+    emblem:SetTexture(BOOK)
+    place(text(f,"GameFontNormalLarge",350),GOLD.."ProfessionGuide|r",52,18)
     ns.characterText=text(f,"GameFontHighlightSmall",260,"RIGHT")
     ns.characterText:SetPoint("TOPRIGHT",-100,-23)
     button(f,"Close",64,778,14,function() ns.db.hidden=true; f:Hide() end)
@@ -82,12 +86,12 @@ function ns.CreateUI()
         ns.status=message; input:ClearFocus(); ns.Render(true)
     end
     input:SetScript("OnEnterPressed",apply)
-    ns.applyButton=button(f,"Plan route",118,486,68,apply)
-    ns.clearButton=button(f,"Clear target",112,614,68,function()
+    ns.applyButton=button(f,actionIcon("INV_Misc_Map_01","Plan route"),118,486,68,apply)
+    ns.clearButton=button(f,actionIcon("INV_Misc_Note_01","Clear target"),112,614,68,function()
         if ns.db.selected then ns.db.targets[ns.db.selected]=nil end
         ns.status="Target cleared. Existing farming goals are unchanged."; ns.Render(true)
     end)
-    button(f,"Refresh",104,738,68,function() ns.Refresh() end)
+    button(f,actionIcon("INV_Misc_PocketWatch_01","Refresh"),104,738,68,function() ns.Refresh() end)
     local left=panel(f,16,112,216,496)
     place(text(left,"GameFontNormalSmall",180),MUTED.."LEVELING ROUTE|r",12,12)
     ns.routeScroll,ns.routeChild=scroll(left,10,39,174,440)
@@ -110,7 +114,7 @@ function ns.CreateUI()
         ns.showNotes=not ns.showNotes; ns.Render(); ns.scroll:SetVerticalScroll(0)
     end)
     place(text(f,"GameFontHighlightSmall",265),MUTED.."WoW-Professions.com  /  Forever|r",206,640)
-    ns.exportButton=button(f,"Export to ItemFarmingTool",254,588,631,function()
+    ns.exportButton=button(f,actionIcon("INV_Misc_Bag_10","Export to ItemFarmingTool"),254,588,631,function()
         ns.Refresh()
         local _,message=ns.Export(ns.plan); ns.status=message; ns.Render()
     end)
@@ -150,7 +154,8 @@ function ns.BuildRoute(slug,skill)
         if not b then
             b=CreateFrame("Button",nil,ns.routeChild,"BackdropTemplate")
             b:SetWidth(174); b:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8"})
-            b.label=text(b,"GameFontHighlight",150); b.label:SetPoint("TOPLEFT",10,-9)
+            b.icon=b:CreateTexture(nil,"ARTWORK"); b.icon:SetSize(20,20); b.icon:SetPoint("TOPLEFT",8,-10)
+            b.label=text(b,"GameFontHighlight",132); b.label:SetPoint("TOPLEFT",34,-9)
             b:SetScript("OnClick",function(self)
                 ns.routeSelection={slug=ns.db.selected,to=self.step.to}
                 ns.showNotes=false; ns.Render(); ns.scroll:SetVerticalScroll(0)
@@ -158,6 +163,7 @@ function ns.BuildRoute(slug,skill)
             ns.routeButtons[i]=b
         end
         b.step=step
+        b.icon:SetTexture(ns.StepIcon(slug,step))
         local names={}
         for _,r in ipairs(step.recipes or {}) do names[#names+1]=r.name end
         local name=#names>0 and table.concat(names," / ") or "Gathering route"
@@ -185,21 +191,22 @@ function ns.RenderRecipe(slug,skill)
     ns.recipeIcon:ClearAllPoints(); ns.recipeIcon:SetPoint("TOPLEFT",0,-y)
     local recipes=step and step.recipes or {}
     local title,details={},{}
-    local icon
+    local icon=ns.ProfessionIcon(slug)
     if step then
         local original=sourceStep(slug,step)
         for i,r in ipairs(recipes) do
-            title[#title+1]=r.name
-            if ns.plan then details[#details+1]="About "..r.crafts.." crafts" end
             local recipe=original and original.recipes and original.recipes[i]
+            local recipeIcon=recipe and ns.SpellIcon(recipe.spell)
+            title[#title+1]=(i>1 and recipeIcon and ns.IconTag(recipeIcon,20) or "")..r.name
+            if ns.plan then details[#details+1]="About "..r.crafts.." crafts" end
             if recipe then
                 local ingredients={}
-                for _,m in ipairs(recipe.materials) do ingredients[#ingredients+1]=m.quantity.." "..m.name end
-                details[#details+1]=MUTED.."Per craft: "..table.concat(ingredients,", ").."|r"
-                if not icon then
-                    icon=ns.Safe(C_Spell and C_Spell.GetSpellTexture,recipe.spell)
-                    if not icon then local _,_,texture=ns.Safe(GetSpellInfo,recipe.spell); icon=texture end
+                for _,m in ipairs(recipe.materials) do
+                    local materialIcon=ns.ItemIcon(ns.ItemIDs[m.name])
+                    ingredients[#ingredients+1]=(materialIcon and ns.IconTag(materialIcon) or "")..m.quantity.." "..m.name
                 end
+                details[#details+1]=MUTED.."Per craft: "..table.concat(ingredients,", ").."|r"
+                if i==1 then icon=recipeIcon or icon end
             end
         end
         if #recipes==0 then title[1]="Gathering route" end
@@ -208,7 +215,7 @@ function ns.RenderRecipe(slug,skill)
         title[1]=ns.plan and ns.plan.complete and "Target reached" or "No further source steps"
         details[1]="Choose another target or view Training & notes."
     end
-    ns.recipeIcon:SetTexture(icon or UNKNOWN); ns.recipeIcon:Show()
+    ns.recipeIcon:SetTexture(icon); ns.recipeIcon:Show()
     y=math.max(y+46,place(ns.recipeText,table.concat(title,"\n"),56,y))+12
     y=place(ns.detailText,table.concat(details,"\n"),0,y)+18
     local warnings={}
@@ -244,13 +251,7 @@ function ns.RenderMaterials(y)
             ns.materialRows[i]=row
         end
         row.itemID=m.id
-        local _,_,_,_,_,_,_,_,_,icon=ns.Safe(C_Item and C_Item.GetItemInfo or GetItemInfo,m.id)
-        ns.itemRequested=ns.itemRequested or {}
-        if not icon and not ns.itemRequested[m.id] then
-            ns.itemRequested[m.id]=true
-            ns.Safe(C_Item and C_Item.RequestLoadItemDataByID,m.id)
-        end
-        row.icon:SetTexture(icon or UNKNOWN); row.name:SetText(m.name)
+        row.icon:SetTexture(ns.ItemIcon(m.id) or BAG); row.name:SetText(m.name)
         row.have:SetText(tostring(m.owned)); row.need:SetText(tostring(m.quantity))
         local short=math.max(0,m.quantity-m.owned)
         row.short:SetText((short==0 and GREEN or GOLD)..short.."|r")
@@ -274,7 +275,7 @@ function ns.Render(resetInput)
         ns.routeSelection=nil; ns.showNotes=false; ns.routeContext=context; resetInput=true
     end
     ns.characterText:SetText("Level "..ns.player.level.."  |  "..(ns.player.faction or "Unknown faction"))
-    ns.profButton:SetText(skill and (skill.name.."  "..skill.rank.." / "..skill.cap.."   >") or "No profession detected")
+    ns.profButton:SetText(skill and (ns.IconTag(ns.ProfessionIcon(slug),18)..skill.name.."  "..skill.rank.." / "..skill.cap.."   >") or "No profession detected")
     if resetInput or not ns.targetInput:HasFocus() then ns.targetInput:SetText(target and tostring(target) or "") end
     ns.plan=skill and target and ns.Plan(slug,ns.player,target) or nil
     ns.BuildRoute(slug,skill)
@@ -308,7 +309,7 @@ function ns.Render(resetInput)
     end
     ns.bodyFrame:SetHeight(math.max(480,height))
     if resetInput then ns.scroll:SetVerticalScroll(0); ns.routeScroll:SetVerticalScroll(0) end
-    ns.notesButton:SetText(ns.showNotes and "Back to workshop" or "Training & notes")
+    ns.notesButton:SetText(actionIcon("INV_Misc_Book_09",ns.showNotes and "Back to workshop" or "Training & notes"))
     ns.exportButton:SetEnabled(ns.CanExport() and ns.plan~=nil and #ns.plan.materials>0)
     ns.statusText:SetText(ns.status or (ns.CanExport() and "ItemFarmingTool connected. Export only when you click; existing higher goals are preserved." or "ItemFarmingTool not loaded. Guide and shopping list remain available."))
     if ns.db.hidden then ns.frame:Hide() else ns.frame:Show() end

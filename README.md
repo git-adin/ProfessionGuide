@@ -1,4 +1,4 @@
-# ProfessionGuide 0.2.0
+# ProfessionGuide 0.2.1
 
 An independent WoW Forever addon (Interface 16001) with character-aware profession
 routes and optional, explicit exports to ItemFarmingTool. No addon dependency,
@@ -29,6 +29,11 @@ Targets and window position are saved per character. Drag the background/title t
 move the window; Close or Escape hides it. `/pg reset` restores the position.
 The Workshop window uses separate scrolling for the route list and recipe/shopping
 details. The selected step survives bag updates and advances when completed.
+Blizzard artwork identifies the profession, route steps, recipes, ingredients,
+materials and main actions. Icons use the client's spell/item APIs, with legacy
+fallbacks and built-in profession/recipe texture paths. Item icons can resolve
+before their full tooltip data is cached; unavailable items refresh after their
+data arrives. No icon images are downloaded or bundled with the addon.
 
 | Command | Action |
 | --- | --- |
