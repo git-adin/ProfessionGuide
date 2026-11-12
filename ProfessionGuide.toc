@@ -1,0 +1,16 @@
+## Interface: 16001
+## Title: ProfessionGuide
+## Notes: Character-aware profession routes and opt-in material planning for Forever.
+## Author: git-adin
+## Version: 0.1.0
+## OptionalDeps: ItemFarmingTool
+## SavedVariablesPerCharacter: ProfessionGuideDB
+## X-License: GPL-3.0-or-later
+
+Data.lua
+Routes.lua
+Character.lua
+Planner.lua
+Integration.lua
+UI.lua
+Core.lua
