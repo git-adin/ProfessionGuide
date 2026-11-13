@@ -7,10 +7,34 @@ function ns.LoadSettings()
     local targets={}
     if type(ns.db.targets)=="table" then
         for slug,target in pairs(ns.db.targets) do
-            if ns.Professions[slug] and ns.Integer(target,1,300) then targets[slug]=target end
+            if ns.Professions[slug] and ns.Integer(target,1,300) then targets[slug]=tonumber(target) end
         end
     end
     ns.db.targets=targets
+    local choices={}
+    if type(ns.db.choices)=="table" then
+        for slug,entries in pairs(ns.db.choices) do
+            if ns.Professions[slug] and type(entries)=="table" then
+                choices[slug]={}
+                for groupID,optionID in pairs(entries) do
+                    if ns.FindChoice(slug,groupID,optionID) then choices[slug][groupID]=optionID end
+                end
+            end
+        end
+    end
+    ns.db.choices=choices
+    local exports={}
+    if type(ns.db.exports)=="table" then
+        for slug,entries in pairs(ns.db.exports) do
+            if ns.Professions[slug] and type(entries)=="table" then
+                exports[slug]={}
+                for id,quantity in pairs(entries) do
+                    if ns.Integer(id,1,2147483647) and ns.Integer(quantity,1,999999) then exports[slug][tonumber(id)]=tonumber(quantity) end
+                end
+            end
+        end
+    end
+    ns.db.exports=exports
     if not ns.Professions[ns.db.selected] then ns.db.selected=nil end
     ns.db.hidden=ns.db.hidden~=false -- stay quiet until first /pg
     ns.db.minimapButton=ns.db.minimapButton~=false

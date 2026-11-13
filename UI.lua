@@ -22,6 +22,7 @@ local function button(parent,label,w,x,y,callback)
     local caption=text(b,"GameFontHighlight",w-14,"CENTER")
     caption:SetPoint("CENTER"); caption:SetTextColor(0.86,0.74,0.46)
     b:SetFontString(caption); b:SetText(label); b:SetScript("OnClick",callback)
+    b.caption=caption
     b:SetScript("OnEnter",function(self) if self:IsEnabled() then self:SetBackdropColor(0.28,0.25,0.17,1) end end)
     b:SetScript("OnLeave",function(self) self:SetBackdropColor(0.18,0.17,0.13,1) end)
     b:SetScript("OnDisable",function() caption:SetTextColor(0.48,0.47,0.43) end)
@@ -109,6 +110,21 @@ function ns.CreateUI()
         ns.tableHead[i]={label=text(ns.bodyFrame,"GameFontHighlightSmall",col[2],i==1 and "LEFT" or "RIGHT"),x=col[1],title=col[3]}
     end
     ns.notesText=text(ns.bodyFrame,"GameFontHighlight",546)
+    ns.optionButton=button(ns.bodyFrame,"Recipe option",546,0,0,function() ns.OpenAlternateMenu() end)
+    ns.compareButton=button(ns.bodyFrame,"Compare alternatives",176,0,0,function()
+        ns.showComparison=not ns.showComparison; ns.Render()
+    end)
+    ns.compareText=text(ns.bodyFrame,"GameFontHighlightSmall",546)
+    ns.choiceDeltaText=text(ns.bodyFrame,"GameFontHighlightSmall",546)
+    ns.exportReviewText=text(ns.bodyFrame,"GameFontHighlightSmall",546)
+    ns.alternateMenu=CreateFrame("Frame",nil,f,"BackdropTemplate")
+    ns.alternateMenu:SetWidth(546); ns.alternateMenu:SetClampedToScreen(true)
+    ns.alternateMenu:SetFrameLevel(f:GetFrameLevel()+20)
+    ns.alternateMenu:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8",edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",edgeSize=12})
+    ns.alternateMenu:SetBackdropColor(0.10,0.12,0.15,1)
+    ns.alternateMenu:SetBackdropBorderColor(0.48,0.40,0.25,1)
+    ns.alternateMenu.buttons={}; ns.alternateMenu:Hide()
+    ns.scroll:HookScript("OnVerticalScroll",function() ns.alternateMenu:Hide() end)
     line(f,18,618,824)
     ns.notesButton=button(f,"Training & notes",162,20,631,function()
         ns.showNotes=not ns.showNotes; ns.Render(); ns.scroll:SetVerticalScroll(0)
@@ -121,8 +137,68 @@ function ns.CreateUI()
     ns.statusText=text(f,"GameFontHighlightSmall",820)
     ns.statusText:SetPoint("TOPLEFT",20,-664)
     if UISpecialFrames then UISpecialFrames[#UISpecialFrames+1]="ProfessionGuideFrame" end
-    f:SetScript("OnHide",function() if ns.db then ns.db.hidden=true end end)
+    f:SetScript("OnHide",function() if ns.db then ns.db.hidden=true end; ns.alternateMenu:Hide() end)
     ns.ApplyPosition()
+end
+
+function ns.OpenAlternateMenu()
+    local menu=ns.alternateMenu
+    if menu:IsShown() then menu:Hide(); return end
+    local slug=ns.db.selected
+    local group=ns.GroupForStep(slug,ns.selectedStep)
+    if not group then return end
+    local active=ns.SelectedOption(slug,group)
+    menu:ClearAllPoints(); menu:SetPoint("TOPLEFT",ns.optionButton,"BOTTOMLEFT",0,-2)
+    local y=8
+    for i,option in ipairs(group.options) do
+        local b=menu.buttons[i]
+        if not b then
+            b=button(menu,"",526,10,y,function(self)
+                local ok,message=ns.SetChoice(ns.db.selected,self.groupID,self.optionID)
+                if not ok then ns.status=message end
+                ns.Render()
+            end)
+            menu.buttons[i]=b
+        end
+        b.groupID,b.optionID=group.id,option.id
+        local label=(active.id==option.id and "> " or "")..option.label
+        if option.faction then label=label.." ("..option.faction.." only)" end
+        b:SetText(label)
+        b:SetEnabled(not option.faction or ns.player.faction==option.faction)
+        local height=math.max(30,b.caption:GetStringHeight()+10)
+        b:ClearAllPoints(); b:SetPoint("TOPLEFT",10,-y); b:SetHeight(height); b:Show()
+        y=y+height+4
+    end
+    for i=#group.options+1,#menu.buttons do menu.buttons[i]:Hide() end
+    menu:SetHeight(y+4); menu:Show()
+end
+
+function ns.RenderChoices(slug,step,y)
+    local group=ns.GroupForStep(slug,step)
+    if not group then return y end
+    local option=ns.SelectedOption(slug,group)
+    ns.optionButton:SetText("Recipe option: "..option.label.."  v")
+    local height=math.max(28,ns.optionButton.caption:GetStringHeight()+10)
+    ns.optionButton:ClearAllPoints(); ns.optionButton:SetPoint("TOPLEFT",0,-y); ns.optionButton:SetHeight(height); ns.optionButton:Show()
+    y=y+height+6
+    ns.compareButton:ClearAllPoints(); ns.compareButton:SetPoint("TOPLEFT",0,-y)
+    ns.compareButton:SetText(ns.showComparison and "Hide comparisons" or "Compare alternatives"); ns.compareButton:Show()
+    y=y+36
+    if ns.showComparison then
+        local lines={}
+        for _,candidate in ipairs(group.options) do
+            lines[#lines+1]=GOLD..candidate.label.."|r"
+            if candidate.note~="" then lines[#lines+1]=candidate.note end
+            if candidate.level>1 then lines[#lines+1]="Character level "..candidate.level.." required." end
+            if candidate.faction then lines[#lines+1]=candidate.faction.." only." end
+            lines[#lines+1]=ns.CompareChoice(slug,group,candidate)
+            lines[#lines+1]=""
+        end
+        ns.compareText:Show(); y=place(ns.compareText,table.concat(lines,"\n"),0,y)+12
+    elseif option.note~="" and not ns.plan then
+        ns.compareText:Show(); y=place(ns.compareText,MUTED..option.note.."|r",0,y)+12
+    end
+    return y
 end
 
 function ns.ApplyPosition()
@@ -138,7 +214,7 @@ function ns.BuildRoute(slug,skill)
     if ns.plan then
         for _,step in ipairs(ns.plan.steps) do rows[#rows+1]=step end
     elseif skill then
-        for _,step in ipairs(ns.Guides[slug].steps) do
+        for _,step in ipairs(ns.GetGuideSteps(slug)) do
             if step.to>skill.rank then rows[#rows+1]=step end
         end
     end
@@ -179,7 +255,7 @@ function ns.BuildRoute(slug,skill)
 end
 
 local function sourceStep(slug,step)
-    for _,s in ipairs(ns.Guides[slug].steps) do
+    for _,s in ipairs(ns.GetGuideSteps(slug)) do
         if s.from<=step.from and s.to>=step.to then return s end
     end
 end
@@ -188,6 +264,7 @@ function ns.RenderRecipe(slug,skill)
     local step=ns.selectedStep
     local label=step and (math.max(skill.rank,step.from).."-"..step.to) or "Route complete"
     local y=place(ns.stepHeading,GOLD..label..(ns.route[1]==step and step and "  |  Current step" or "").."|r",0,0)+14
+    y=ns.RenderChoices(slug,step,y)
     ns.recipeIcon:ClearAllPoints(); ns.recipeIcon:SetPoint("TOPLEFT",0,-y)
     local recipes=step and step.recipes or {}
     local title,details={},{}
@@ -198,7 +275,7 @@ function ns.RenderRecipe(slug,skill)
             local recipe=original and original.recipes and original.recipes[i]
             local recipeIcon=recipe and ns.RecipeIcon(recipe.spell)
             title[#title+1]=(i>1 and recipeIcon and ns.IconTag(recipeIcon,20) or "")..r.name
-            if ns.plan then details[#details+1]="About "..r.crafts.." crafts" end
+            if ns.plan then details[#details+1]=(r.minimum and "At least " or "About ")..r.crafts.." crafts"..(r.minimum and " (minimum only; allow extra materials)" or "") end
             if recipe then
                 local ingredients={}
                 for _,m in ipairs(recipe.materials) do
@@ -223,11 +300,14 @@ function ns.RenderRecipe(slug,skill)
     if ns.player.collapsed then warnings[#warnings+1]="Expand collapsed Skills categories if a profession is missing." end
     ns.warningText:SetText("")
     if #warnings>0 then y=place(ns.warningText,"|cffffbf69"..table.concat(warnings,"\n").."|r",0,y)+18 end
+    if ns.choiceDelta then ns.choiceDeltaText:Show(); y=place(ns.choiceDeltaText,MUTED.."Last choice: "..ns.choiceDelta.."|r",0,y)+16 end
+    local review=ns.ExportReview(ns.plan)
+    if review then ns.exportReviewText:Show(); y=place(ns.exportReviewText,"|cffffbf69"..review.."|r",0,y)+16 end
     return y
 end
 
 function ns.RenderMaterials(y)
-    y=place(ns.shoppingTitle,"Shopping list"..(ns.plan and "  "..MUTED.."to "..ns.plan.target.."|r" or ""),0,y)+12
+    y=place(ns.shoppingTitle,"Shopping list"..(ns.plan and ns.plan.minimum and " (minimum)" or "")..(ns.plan and "  "..MUTED.."to "..ns.plan.target.."|r" or ""),0,y)+12
     local materials=ns.plan and ns.plan.materials or {}
     for _,col in ipairs(ns.tableHead) do
         if #materials>0 then place(col.label,MUTED..col.title.."|r",col.x,y); col.label:Show()
@@ -261,6 +341,7 @@ function ns.RenderMaterials(y)
     for i=#materials+1,#ns.materialRows do ns.materialRows[i]:Hide() end
     local message=not ns.plan and "Choose a target and click Plan route to calculate supplies."
         or (#materials==0 and "No consumable materials for this route." or "Have = carried supplies. Need = entire remaining route.\nEstimated quantities; yellow/green recipes may need extra crafts.")
+    if ns.plan and ns.plan.minimum then message=message.."\nMinimum estimates only: source does not give a full craft count for this alternate." end
     y=place(ns.materialMessage,MUTED..message.."|r",0,y+12)+14
     return y
 end
@@ -272,13 +353,14 @@ function ns.Render(resetInput)
     local target=slug and ns.db.targets[slug]
     local context=(slug or "")..":"..tostring(target)
     if ns.routeContext~=context then
-        ns.routeSelection=nil; ns.showNotes=false; ns.routeContext=context; resetInput=true
+        ns.routeSelection=nil; ns.showNotes=false; ns.showComparison=false; ns.choiceDelta=nil; ns.routeContext=context; resetInput=true
     end
     ns.characterText:SetText("Level "..ns.player.level.."  |  "..(ns.player.faction or "Unknown faction"))
     ns.profButton:SetText(skill and (ns.IconTag(ns.ProfessionIcon(slug),18)..skill.name.."  "..skill.rank.." / "..skill.cap.."   >") or "No profession detected")
     if resetInput or not ns.targetInput:HasFocus() then ns.targetInput:SetText(target and tostring(target) or "") end
     ns.plan=skill and target and ns.Plan(slug,ns.player,target) or nil
     ns.BuildRoute(slug,skill)
+    ns.alternateMenu:Hide(); ns.optionButton:Hide(); ns.compareButton:Hide(); ns.compareText:Hide(); ns.choiceDeltaText:Hide(); ns.exportReviewText:Hide()
     local content={ns.stepHeading,ns.recipeText,ns.recipeIcon,ns.detailText,ns.warningText,ns.shoppingTitle,ns.materialMessage}
     for _,v in ipairs(content) do v:Hide() end
     for _,v in ipairs(ns.tableHead) do v.label:Hide() end
@@ -300,7 +382,8 @@ function ns.Render(resetInput)
             notes[#notes+1]="\nTools, books, recipe purchases and training fees are separate. Imperial Plate recipe bars and Artisan Cooking quest supplies are included when needed."
             notes[#notes+1]="\nExport adds minimum total goals. Higher existing goals are preserved. Old goals are not removed; shared items across separate plans are not added together."
             notes[#notes+1]="\nSource: WoW-Professions.com (2026-11-12)\n"..ns.Guides[slug].source
-            notes[#notes+1]="\nDefault routes only. Higher-level routes are provisional; Tailoring ends at 265. No live auction prices or automatic crafting."
+            notes[#notes+1]="\nRecipe option selects a default or alternate path. Linked steps change together. Compare alternatives shows material changes for the full target. Choices save per character and profession. No farming goals change until you export."
+            notes[#notes+1]="\nHigher-level routes are provisional; Tailoring ends at 265. Some alternates have minimum counts only. No live auction prices or automatic crafting."
             if slug=="lockpicking" then notes[#notes+1]="\nLockpicking cap: five times your character level, up to 300." end
         else
             notes={GOLD.."No profession detected|r","","Learn a profession, then click Refresh. Expand collapsed categories in the Skills panel if a profession is missing."}

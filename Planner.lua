@@ -9,7 +9,7 @@ function ns.BagCount(name)
     local count=id and ns.Safe(C_Item and C_Item.GetItemCount or GetItemCount,id,false,false,false,false)
     return type(count)=="number" and math.max(0,count) or 0
 end
-function ns.Plan(slug, player, target)
+function ns.Plan(slug, player, target, choices)
     local guide, meta=ns.Guides[slug], ns.Professions[slug]
     local skill=player.professions[slug]
     if not skill then return nil,"Profession not detected. Learn it or expand the Skills panel." end
@@ -34,8 +34,24 @@ function ns.Plan(slug, player, target)
     local demand, supply, conversions={},{},{}
     local imperial={ ["Imperial Plate Belt"]=20,["Imperial Plate Bracers"]=20,
         ["Imperial Plate Boots"]=40,["Imperial Plate Leggings"]=60 }
-    for _,s in ipairs(guide.steps) do
-        for _,r in ipairs(s.recipes or {}) do conversions[r.name]=r end
+    local function learn(step)
+        for _,r in ipairs(step.recipes or {}) do conversions[r.name]=r end
+    end
+    for _,step in ipairs(guide.steps) do learn(step) end
+    for _,group in ipairs(ns.Alternates[slug] or {}) do
+        local affects=false
+        for _,range in ipairs(group.ranges) do if range[2]>skill.rank and range[1]<limit then affects=true end end
+        local option=ns.SelectedOption(slug,group,choices)
+        if affects and option.id~="default" then
+            if option.note~="" then plan.warnings[#plan.warnings+1]=option.note end
+            if player.level<option.level then plan.warnings[#plan.warnings+1]="Selected alternate requires character level "..option.level.."." end
+            if option.faction and player.faction~=option.faction then plan.warnings[#plan.warnings+1]="Selected alternate is for "..option.faction.." only. Choose another option." end
+        end
+        for _,opt in ipairs(group.options) do for _,block in ipairs(opt.blocks) do for _,s in ipairs(block.steps) do learn(s) end end end
+    end
+    local imperialUsed=false
+    for _,s in ipairs(ns.GetGuideSteps(slug,choices)) do
+        learn(s)
         if s.to>skill.rank and s.from<limit then
             local lo,hi=math.max(skill.rank,s.from),math.min(limit,s.to)
             local step={from=lo,to=hi,action=s.action,recipes={}}
@@ -43,12 +59,14 @@ function ns.Plan(slug, player, target)
             if zone then step.action=(step.action or "").." Location: "..zone.."." end
             for _,r in ipairs(s.recipes or {}) do
                 local crafts=math.ceil(r.crafts*(hi-lo)/(s.to-s.from))
-                step.recipes[#step.recipes+1]={name=r.name,crafts=crafts}
+                if r.minimum then plan.minimum=true end
+                step.recipes[#step.recipes+1]={name=r.name,crafts=crafts,minimum=r.minimum}
                 supply[r.name]=(supply[r.name] or 0)+crafts*(r.yield or 1)
                 for _,m in ipairs(r.materials) do demand[m.name]=(demand[m.name] or 0)+math.ceil(m.quantity*crafts) end
                 if slug=="blacksmithing" and imperial[r.name] and ns.Safe(IsPlayerSpell,r.spell)~=true then
                     demand["Thorium Bar"]=(demand["Thorium Bar"] or 0)+imperial[r.name]
                 end
+                if imperial[r.name] then imperialUsed=true end
             end
             plan.steps[#plan.steps+1]=step
         end
@@ -57,7 +75,7 @@ function ns.Plan(slug, player, target)
         demand["Giant Egg"],demand["Zesty Clam Meat"],demand["Alterac Swiss"]=12,10,20
         plan.warnings[#plan.warnings+1]="Artisan Cooking quest supplies are included."
     end
-    if slug=="blacksmithing" and target>240 then
+    if slug=="blacksmithing" and imperialUsed then
         plan.warnings[#plan.warnings+1]="Imperial Plate: level 50 required; quest skill gates are unverified. Recipe quest bars are included unless the recipe is detected as known."
     end
     if ((slug=="engineering" and target>200) or (slug=="leatherworking" and target>205)) and player.level<35 then

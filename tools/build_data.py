@@ -125,9 +125,26 @@ for slug,soup in soups.items():
     if expected != (265 if slug=='tailoring' else 300): raise ValueError((slug,'Unexpected coverage',expected))
     guides[slug]={'steps':steps,'cap':expected,'source':'https://www.wow-professions.com/forever/'+slug+'-leveling-guide'}
 
+from alternate_routes import build as build_alternates
+alternates=build_alternates(guides,soups,recipe,items)
+all_recipes=[r for g in guides.values() for s in g['steps'] for r in s['recipes']]
+for slug,groups in alternates.items():
+    for group in groups:
+        for option in group['options']:
+            for block in option['blocks']:
+                expected=block['from']
+                for step in block['steps']:
+                    if step['from']!=expected: raise ValueError(('Alternate gap',slug,group['id']))
+                    expected=step['to']
+                    all_recipes.extend(step['recipes'])
+                if expected!=block['to']: raise ValueError(('Alternate coverage',slug,group['id']))
+missing_ids=sorted({m['name'] for r in all_recipes for m in r['materials'] if m['name'] not in items})
+if missing_ids: raise ValueError(('Unresolved alternate item IDs',missing_ids))
+
 def lua(value):
     if isinstance(value,dict): return '{'+','.join('['+json.dumps(k)+']='+lua(v) for k,v in value.items())+'}'
     if isinstance(value,list): return '{'+','.join(map(lua,value))+'}'
+    if isinstance(value,bool): return 'true' if value else 'false'
     return json.dumps(value,ensure_ascii=True)
 
 output='-- Recipe facts compiled from WoW-Professions.com, 2026-11-12. See SOURCES.md.\nlocal _, ns = ...\n'
@@ -138,7 +155,11 @@ for slug,g in guides.items():
     output+=''.join('        '+lua(step)+',\n' for step in g['steps'])
     output+='    }},\n'
 output+='}\n'
-used_spells={r['spell'] for g in guides.values() for s in g['steps'] for r in s['recipes']}
+output+='ns.Alternates = {\n'
+for slug,groups in alternates.items():
+    output+='    ['+json.dumps(slug)+']={\n'+''.join('        '+lua(group)+',\n' for group in groups)+'    },\n'
+output+='}\n'
+used_spells={r['spell'] for r in all_recipes}
 output+='ns.RecipeIcons = {\n'+''.join('    ['+str(k)+']='+json.dumps(v)+',\n' for k,v in sorted(recipe_icons.items()) if k in used_spells)+'}\n'
 (ROOT/'Data.lua').write_text(output,encoding='utf-8')
 for slug,g in guides.items(): print(slug,len(g['steps']),g['cap'])

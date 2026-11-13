@@ -57,7 +57,7 @@ function ns.IconTag(icon,size)
     return "|T"..tostring(icon)..":"..(size or 16)..":"..(size or 16)..":0:0|t "
 end
 function ns.StepIcon(slug,step)
-    for _,s in ipairs(ns.Guides[slug].steps) do
+    for _,s in ipairs(ns.GetGuideSteps(slug)) do
         if s.from<=step.from and s.to>=step.to then
             for _,r in ipairs(s.recipes or {}) do
                 local icon=ns.RecipeIcon(r.spell)

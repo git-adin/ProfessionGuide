@@ -1,4 +1,4 @@
-# ProfessionGuide 0.2.3
+# ProfessionGuide 0.3.0
 
 An independent WoW Forever addon (Interface 16001) with character-aware profession
 routes and optional, explicit exports to ItemFarmingTool. No addon dependency,
@@ -17,6 +17,8 @@ Drag it around the minimap; its position and visibility are saved per character.
 3. Select a step in the left route list to see its recipes, estimated crafts and
    ingredients on the right. The shopping table always covers the entire target,
    with separate **Have**, **Need** and **Short** columns and item tooltips.
+   Where available, use **Recipe option** to choose an alternate and **Compare
+   alternatives** to see requirements and material changes before switching.
 4. Open **Training & notes** for trainer locations, rank requirements and source
    details. Warnings about the chosen route also appear above the shopping table.
 5. If ItemFarmingTool is loaded, click **Export to ItemFarmingTool** to
@@ -50,12 +52,36 @@ generic logo for legacy recipe spell IDs.
 | `/pg minimap show` / `/pg minimap hide` | Show / hide minimap button |
 | `/pg minimap reset` | Restore minimap button position and show it |
 
+## Recipe alternatives
+
+Version 0.3.0 includes **47 alternates in 28 choice groups** across the crafting
+professions, Cooking and First Aid. The selector appears only for affected steps.
+Use **Compare alternatives** to expand each option's recipe source, requirements
+and ingredient changes for your full target. Counts do not compare auction prices.
+
+Selections save per character and profession. Alchemy's oil/mana route,
+Enchanting's dust/essence paths and Leatherworking's saved-hide paths change as
+one choice, including later dependent steps. Enchanting now defaults consistently
+to the source's active Strange Dust path. You can restore **Guide default** in
+each selector. Different unrelated choice groups can be combined.
+
+Some informal alternates have no source craft estimate. Where ingredient amounts
+are specified, these use an explicit one-point-per-craft **minimum**; the recipe,
+comparison and shopping list warn that actual materials may be substantially
+higher. The 165-185 Lesser Agility estimate is inferred from the source shopping
+list. Recipe knowledge is not assumed. Source-noted faction restrictions prevent
+selecting the wrong faction's option; level gates warn while allowing future plans.
+
+Changing an option without a target changes the guide preview only. A target is
+still required to calculate or export materials. Changing a choice never edits
+ItemFarmingTool automatically.
+
 ## Estimates and limitations
 
 The bundled factual route snapshot comes from [WoW-Professions.com's Forever
 guides](https://www.wow-professions.com/forever), retrieved November 12, 2026.
 Instructions are condensed and rewritten; this is not the full website, its maps,
-or its alternative routes. See [SOURCES.md](SOURCES.md).
+or every informal recipe suggestion. See [SOURCES.md](SOURCES.md).
 
 - **Tailoring ends at 265**, matching the available source route. A higher target
   shows an explicit coverage warning. Other default crafting routes reach 300.
@@ -97,9 +123,15 @@ plans use the higher exported goal, **not the sum**; export is one selected rout
 at a time. The full batch is checked against its 100-item capacity before any
 writes. Its own Bags + bank / Bags only setting controls inventory accounting.
 
+The addon remembers material lists exported with version 0.3.0 onward. If a new
+route needs fewer of those items, it lists the old tracked goals for **manual
+review**. These reminders remain after re-exporting until the goals are removed
+or adjusted. It cannot attribute goals created before that history existed, and
+does not assume that an old goal belongs exclusively to ProfessionGuide.
+
 ## Engineering and validation
 
-Modules have separate responsibilities: data and routes, game API detection,
+Modules have separate responsibilities: data and routes, saved recipe choices, game API detection,
 pure route planning with inventory reads, optional integration, UI, and lifecycle.
 Game events batch refreshes; no per-frame polling. The other addons in this
 workspace are unchanged.
@@ -119,7 +151,9 @@ checks the ZIP's contents and CRCs and writes SHA-256 checksums.
 
 For a source refresh, install `beautifulsoup4` for development, run
 `tools/inspect_source.py` with the eight crafting-guide slugs listed in
-`tools/build_data.py`, then run `tools/build_data.py`. Review all changed ranges,
+`tools/build_data.py`, then run `tools/build_data.py`. Reviewed alternate branches
+live in `tools/alternate_routes.py`; Cooking options are read from the source tables.
+Review all changed ranges,
 recipe yields, branches, IDs, trainer/quest notes and source dates before shipping.
 The compiler rejects coverage gaps and unresolved IDs are reported. Cached web
 pages are ignored and never packaged.

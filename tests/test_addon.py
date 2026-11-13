@@ -6,7 +6,7 @@ sys.path.insert(0,str(ROOT.parent/'.tools'))
 sys.path.insert(0,str(ROOT/'.tools'))
 from lupa.lua51 import LuaRuntime
 
-FILES=['Data.lua','Routes.lua','Character.lua','Icons.lua','Planner.lua','Integration.lua','UI.lua','Minimap.lua','Core.lua']
+FILES=['Data.lua','Routes.lua','Character.lua','Icons.lua','Choices.lua','Planner.lua','Integration.lua','UI.lua','Minimap.lua','Core.lua']
 
 class AddonTests(unittest.TestCase):
     def setUp(self):
@@ -376,5 +376,143 @@ class AddonTests(unittest.TestCase):
             assert(math.abs(ns.minimapButton.point[5]-108)<0.001)
             GetMinimapShape=nil; ns.PositionMinimapButton()
             assert(ns.minimapButton.point[4]<108)''')
+
+    def test_linked_alchemy_choice_updates_both_steps_and_materials(self):
+        self.check('''skills[1].rank=130; ns.Refresh(); ns.SetTarget(165); ns.Render()
+            assert(ns.SetChoice('alchemy','oil-mana','mana')); ns.Render()
+            assert(#ns.plan.steps==2)
+            for _,s in ipairs(ns.plan.steps) do assert(s.recipes[1].name=='Lesser Mana Potion') end
+            local mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
+            assert(mats.Mageroyal==42 and mats.Stranglekelp==42 and mats['Empty Vial']==42)
+            assert(mats['Firefin Snapper']==nil and mats.Kingsblood==nil)
+            assert(ns.choiceDelta:find('Reduces 40 Firefin Snapper'))
+            ns.db=nil; ns.LoadSettings(); assert(ns.ActiveChoices('alchemy')['oil-mana']=='mana')
+            assert(ns.SetChoice('alchemy','oil-mana','default')); ns.Render()
+            assert(ns.plan.steps[1].recipes[1].name=='Fire Oil')''')
+
+    def test_alternate_dropdown_comparison_and_no_target(self):
+        self.check('''ns.Command('show'); skills[1].rank=130; ns.Refresh()
+            assert(ns.optionButton:IsShown() and ns.plan==nil)
+            ns.optionButton:GetScript('OnClick')(); assert(ns.alternateMenu:IsShown())
+            local alternate=ns.alternateMenu.buttons[2]
+            alternate:GetScript('OnClick')(alternate)
+            assert(not ns.alternateMenu:IsShown() and ns.plan==nil)
+            assert(ns.recipeText:GetText()=='Lesser Mana Potion')
+            assert(not ns.exportButton.enabled)
+            ns.SetTarget(165); ns.Render(); ns.compareButton:GetScript('OnClick')()
+            assert(ns.compareText:IsShown() and ns.compareText:GetText():find('Firefin Snapper'))
+            assert(ns.ActiveChoices('alchemy')['oil-mana']=='mana')
+            ns.compareButton:GetScript('OnClick')(); assert(not ns.compareText:IsShown())''')
+
+    def test_enchanting_consistent_paths_and_minimum_estimate(self):
+        self.check('''skills={{skillID=333,name='Enchanting',rank=20,maxRank=150}}; ns.Refresh()
+            ns.SetTarget(150); ns.Render()
+            local defaults=ns.GetGuideSteps('enchanting')
+            assert(defaults[4].recipes[1].name=='Enchant Bracer - Minor Stamina')
+            assert(ns.SetChoice('enchanting','early-path','essence')); ns.Render()
+            assert(ns.plan.steps[1].recipes[1].name=='Enchant Bracer - Minor Deflect')
+            assert(ns.plan.steps[#ns.plan.steps].recipes[1].name=='Enchant 2H Weapon - Lesser Intellect')
+            ns.SetChoice('enchanting','early-path','essence-trainer'); ns.Render()
+            assert(ns.plan.steps[#ns.plan.steps].recipes[1].name=='Enchant Boots - Minor Stamina')
+            skills[1].rank=250; ns.Refresh(); ns.SetTarget(265)
+            ns.SetChoice('enchanting','lotus','strength'); ns.Render()
+            assert(ns.detailText:GetText():find('At least 15 crafts'))
+            assert(ns.warningText:GetText():find('Minimum craft count'))''')
+
+    def test_leatherworking_linked_choices_compose(self):
+        self.check('''skills={{skillID=165,name='Leatherworking',rank=30,maxRank=150}}; ns.Refresh()
+            ns.SetTarget(125); ns.SetChoice('leatherworking','light-hides','hides')
+            ns.SetChoice('leatherworking','medium-hides','leather'); ns.Render()
+            local names={}; for _,s in ipairs(ns.plan.steps) do names[s.from]=s.recipes[1].name end
+            assert(names[30]=='Cured Light Hide' and names[45]==nil)
+            assert(names[100]=='Light Leather Pants' and names[80]=='Fine Leather Belt')
+            assert(names[115]=='Dark Leather Pants' and names[120]=="Hillman's Leather Gloves")
+            assert(ns.warningText:GetText():find('Keep 24'))''')
+
+    def test_choice_requirements_faction_and_corrupt_saves(self):
+        self.check('''skills={{skillID=197,name='Tailoring',rank=215,maxRank=225}}; ns.Refresh()
+            ns.SetTarget(225); assert(ns.SetChoice('tailoring','bags','belts')); ns.Render()
+            assert(ns.warningText:GetText():find('level 35'))
+            assert(not ns.SetChoice('alchemy','invalid','invalid'))
+            local found=false
+            for _,g in ipairs(ns.Alternates.cooking) do for _,o in ipairs(g.options) do
+                if o.faction=='Horde' then assert(not ns.SetChoice('cooking',g.id,o.id)); found=true end
+            end end
+            assert(found)
+            ns.db.choices.invalid={bad='bad'}; ns.db.choices.alchemy={['oil-mana']='mana',bad='bad'}
+            ns.db.exports={alchemy={['bad']='bad',[2447]=-1,[3371]=42}}
+            ns.db=nil; ns.LoadSettings()
+            assert(ns.db.choices.invalid==nil and ns.db.choices.alchemy.bad==nil)
+            assert(ns.db.choices.alchemy['oil-mana']=='mana' and ns.db.exports.alchemy[3371]==42)
+            assert(ns.db.exports.alchemy[2447]==nil)''')
+
+    def test_comparisons_and_choices_do_not_write_farming_goals(self):
+        self.check('''skills[1].rank=130; ns.Refresh(); ns.SetTarget(165); ns.Render()
+            ItemFarmingToolDB={items={}}; writes=0
+            SlashCmdList.ITEMFARMINGTOOL=function() writes=writes+1 end
+            local group=ns.GroupForStep('alchemy',ns.selectedStep)
+            local comparison=ns.CompareChoice('alchemy',group,group.options[2])
+            assert(comparison:find('Adds 42 Stranglekelp') and ns.ActiveChoices('alchemy')['oil-mana']==nil)
+            ns.SetChoice('alchemy','oil-mana','mana'); ns.Render()
+            Fire('BAG_UPDATE_DELAYED'); Fire('SKILL_LINES_CHANGED'); Tick()
+            assert(writes==0 and next(ns.db.exports)==nil)''')
+
+    def test_previous_export_review_survives_reexport(self):
+        folder=ROOT.parent/'ItemFarmingTool/ItemFarmingTool'
+        if not folder.exists(): self.skipTest('Optional sibling ItemFarmingTool source unavailable')
+        ift=self.lua.table(); self.lua.globals().ift=ift
+        for name in ['Core.lua','UI.lua']:
+            self.lua.execute((folder/name).read_text(encoding='utf-8'),'ItemFarmingTool',ift)
+        self.check('''Fire('ADDON_LOADED','ItemFarmingTool'); Fire('PLAYER_LOGIN')
+            skills[1].rank=130; ns.Refresh(); ns.SetTarget(165); ns.Render()
+            assert(ns.Export(ns.plan)); assert(ift.Find(6359).goal==40)
+            ns.SetChoice('alchemy','oil-mana','mana'); ns.Render()
+            local review=ns.ExportReview(ns.plan)
+            assert(review:find('Firefin Snapper') and review:find('needs 0'))
+            assert(ift.Find(6359).goal==40)
+            assert(ns.Export(ns.plan)); assert(ns.ExportReview(ns.plan):find('Firefin Snapper'))
+            ift.RemoveItem(6359); assert(not ns.ExportReview(ns.plan):find('Firefin Snapper'))
+            assert(ift.Find(3820).goal==42)''')
+
+    def test_all_alternate_paths_have_valid_coverage_items_and_icons(self):
+        self.check('''for slug,groups in pairs(ns.Alternates) do
+            local player={level=60,faction='Alliance',professions={[slug]={rank=1,cap=300}}}
+            local function validate(choices)
+                local expected=1
+                for _,s in ipairs(ns.GetGuideSteps(slug,choices)) do
+                    assert(s.from==expected and s.to>s.from,slug..':'..expected); expected=s.to
+                    for _,r in ipairs(s.recipes) do
+                        assert(ns.RecipeIcons[r.spell],r.name)
+                        for _,m in ipairs(r.materials) do assert(ns.ItemIDs[m.name] and m.quantity%1==0 and m.quantity>0,m.name) end
+                    end
+                end
+                assert(expected==ns.Guides[slug].cap,slug)
+                for _,rank in ipairs({1,74,109,130,149,165,215,240,264,295}) do
+                    player.professions[slug].rank=rank
+                    local plan=assert(ns.Plan(slug,player,300,choices))
+                    for _,m in ipairs(plan.materials) do assert(m.id and m.quantity>0 and m.quantity%1==0) end
+                end
+            end
+            local mixed={}
+            for _,g in ipairs(groups) do
+                for _,o in ipairs(g.options) do validate({[g.id]=o.id}) end
+                mixed[g.id]=g.options[#g.options].id
+            end
+            validate(mixed)
+        end''')
+
+    def test_minimum_comparison_warning_and_numeric_save_normalization(self):
+        self.check('''skills={{skillID=197,name='Tailoring',rank=215,maxRank=225}}; ns.Refresh()
+            ns.SetTarget(225); ns.SetChoice('tailoring','bags','belts'); ns.Render()
+            local mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
+            assert(mats.Runecloth==150 and mats['Rune Thread']==10)
+            assert(mats['Mageweave Cloth']==nil)
+            skills={{skillID=333,name='Enchanting',rank=250,maxRank=300}}; ns.Refresh()
+            ns.SetTarget(265); ns.Render(); ns.SetChoice('enchanting','lotus','strength'); ns.Render()
+            assert(ns.plan.minimum and ns.shoppingTitle:GetText():find('minimum'))
+            assert(ns.choiceDelta:find('minimum estimates'))
+            ns.db.targets.alchemy='90'; ns.db.exports.alchemy={['3371']='42'}
+            ns.db=nil; ns.LoadSettings()
+            assert(ns.db.targets.alchemy==90 and ns.db.exports.alchemy[3371]==42)''')
 
 if __name__=='__main__': unittest.main(verbosity=2)

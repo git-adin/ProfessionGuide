@@ -26,8 +26,16 @@ and vendor-supply IDs are explicitly mapped in the compiler. Spell IDs come from
 the guide's recipe links. No whole shopping list is copied as a fixed goal:
 requirements are calculated from the remaining steps and chosen target.
 
-Branch policy: first continuous recipe branch, First Aid bandages at low skill,
-first cooking-table option; both Engineering 135–150 components are required.
+Default branch policy: first continuous recipe branch, the active Strange Dust
+Enchanting tab, First Aid bandages at low skill and the first cooking-table option;
+both Engineering 135–150 components are required. Reviewed alternate branches
+are defined in `tools/alternate_routes.py`, including linked replacements. Cooking
+table options retain ingredient facts and vendor/quest locations, not guide prose.
+Sparse suggestions without verifiable ingredients are not compiled as recipes.
+Where the source gives ingredients but no craft count, explicit minimum estimates
+are marked in the compiled data and UI. Lesser Agility 165–185 uses 22 crafts,
+inferred from the source alternative shopping list (39 Soul Dust minus the rod
+and oil requirements). Smoked Bear Meat uses the upper end of its source range.
 Tailoring 265–300 has no source recipe and is deliberately unavailable. The
 Leatherworking 1–30 estimate of 100 scraps for 33 crafts is normalized to the
 actual whole-craft ratio of three scraps. Fire Oil produces two per craft.
