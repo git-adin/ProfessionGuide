@@ -1,4 +1,4 @@
-# ProfessionGuide 0.3.0
+# ProfessionGuide 0.3.1
 
 An independent WoW Forever addon (Interface 16001) with character-aware profession
 routes and optional, explicit exports to ItemFarmingTool. No addon dependency,
@@ -96,6 +96,12 @@ or every informal recipe suggestion. See [SOURCES.md](SOURCES.md).
   consumption, then expands missing intermediates using recipe ingredients.
   Carried intermediate stock reduces those requirements; banked intermediates
   are not included. Raw leather and metal bars are shopping inputs.
+  **Prepared supplies** shows each intermediate checked, how many carried items
+  are credited, and how many are still needed after planned route output. For
+  example, 37 Cured Heavy Hides needed minus 11 carried means ingredients for 26:
+  26 Heavy Hides and 78 Salt. Raw Heavy Hides and Cured Heavy Hides use distinct
+  item IDs; owning one never counts as owning the other. Inventory events update
+  both the credit and the remaining raw-material totals.
 - Materials show totals for the remaining route and your current carried count.
   Tools, recipe purchases, training fees and manuals are separate. Imperial Plate
   recipe quest bars are included unless `IsPlayerSpell` confirms the recipe is

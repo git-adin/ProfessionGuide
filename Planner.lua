@@ -14,7 +14,7 @@ function ns.Plan(slug, player, target, choices)
     local skill=player.professions[slug]
     if not skill then return nil,"Profession not detected. Learn it or expand the Skills panel." end
     if not ns.Integer(target,1,300) then return nil,"Choose a whole-number target from 1 to 300." end
-    local plan={steps={},materials={},warnings={},target=target,rank=skill.rank,slug=slug}
+    local plan={steps={},materials={},prepared={},warnings={},target=target,rank=skill.rank,slug=slug}
     if target<=skill.rank then plan.complete=true; return plan end
     local limit=math.min(target,guide.cap)
     if target>guide.cap then plan.warnings[#plan.warnings+1]="Source coverage ends at "..guide.cap.."; later steps are unavailable." end
@@ -87,7 +87,7 @@ function ns.Plan(slug, player, target, choices)
     if slug=="tailoring" then
         conversions["Bolt of Runecloth"]={yield=1,materials={{name="Runecloth",quantity=5}}}
     end
-    local raw, available={},{}
+    local raw, available, prepared={},{},{}
     local function expand(name,amount,path)
         if amount<=0 then return end
         local r=conversions[name]
@@ -96,6 +96,12 @@ function ns.Plan(slug, player, target, choices)
             if available[name]==nil then available[name]=ns.BagCount(name) end
             local used=math.min(amount,available[name])
             available[name]=available[name]-used; amount=amount-used
+            local entry=prepared[name]
+            if not entry then
+                entry={name=name,id=ns.ItemIDs[name],owned=ns.BagCount(name),used=0,missing=0}
+                prepared[name]=entry
+            end
+            entry.used=entry.used+used; entry.missing=entry.missing+amount
             local crafts=math.ceil(amount/(r.yield or 1))
             local branch={}; for k,v in pairs(path) do branch[k]=v end; branch[name]=true
             for _,m in ipairs(r.materials) do expand(m.name,math.ceil(crafts*m.quantity),branch) end
@@ -106,5 +112,7 @@ function ns.Plan(slug, player, target, choices)
         if amount>0 then plan.materials[#plan.materials+1]={name=name,id=ns.ItemIDs[name],quantity=amount,owned=ns.BagCount(name)} end
     end
     table.sort(plan.materials,function(a,b) return a.name<b.name end)
+    for _,entry in pairs(prepared) do plan.prepared[#plan.prepared+1]=entry end
+    table.sort(plan.prepared,function(a,b) return a.name<b.name end)
     return plan
 end

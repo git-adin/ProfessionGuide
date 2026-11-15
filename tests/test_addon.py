@@ -515,4 +515,49 @@ class AddonTests(unittest.TestCase):
             ns.db=nil; ns.LoadSettings()
             assert(ns.db.targets.alchemy==90 and ns.db.exports.alchemy[3371]==42)''')
 
+    def test_prepared_heavy_hides_match_screenshot_and_refresh(self):
+        self.check('''ns.Command('show')
+            skills={{skillID=165,name='Leatherworking',rank=164,maxRank=225}}
+            owned={[4236]=11,[4235]=11,[4234]=68,[2321]=2}
+            ns.Refresh(); ns.SetTarget(195); ns.Render()
+            local mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
+            assert(mats['Heavy Hide']==26 and mats.Salt==78 and mats['Heavy Leather']==152)
+            local cured=ns.plan.prepared[1]
+            assert(cured.name=='Cured Heavy Hide' and cured.used==11 and cured.missing==26)
+            assert(ns.preparedText:IsShown() and ns.preparedText:GetText():find('use 11 from bags'))
+            owned[4236]=37; Fire('BAG_UPDATE_DELAYED'); Tick()
+            mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
+            assert(mats['Heavy Hide']==nil and mats.Salt==nil)
+            assert(ns.plan.prepared[1].used==37 and ns.plan.prepared[1].missing==0)
+            assert(ns.preparedText:GetText():find('still need 0'))
+            ns.clearButton:GetScript('OnClick')(); assert(not ns.preparedText:IsShown())''')
+
+    def test_raw_and_cured_hides_are_distinct_and_bank_is_not_credited(self):
+        self.check('''skills={{skillID=165,name='Leatherworking',rank=164,maxRank=225}}
+            owned={[4235]=100}; ns.Refresh(); ns.SetTarget(195); ns.Render()
+            assert(ns.plan.prepared[1].used==0 and ns.plan.prepared[1].missing==37)
+            local mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m end
+            assert(mats['Heavy Hide'].quantity==37 and mats['Heavy Hide'].owned==100)
+            assert(mats.Salt.quantity==111)
+            bankQueries=0
+            C_Item.GetItemCount=function(id,includeBank)
+                if includeBank then bankQueries=bankQueries+1; return 999 end
+                return owned[id] or 0
+            end
+            ns.Refresh(); assert(ns.plan.prepared[1].used==0 and bankQueries==0)''')
+
+    def test_prepared_credit_does_not_skip_leveling_crafts(self):
+        self.check('''skills={{skillID=197,name='Tailoring',rank=1,maxRank=75}}
+            owned={[2996]=100}; ns.Refresh(); ns.SetTarget(55); ns.Render()
+            assert(ns.plan.steps[1].recipes[1].name=='Bolt of Linen Cloth')
+            assert(ns.plan.steps[1].recipes[1].crafts==30)
+            local mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
+            assert(mats['Linen Cloth']==60) -- these crafts are needed for skill points
+            assert(#ns.plan.prepared==0) -- route output already covers all 28 belts
+            skills={{skillID=197,name='Tailoring',rank=30,maxRank=75}}; ns.Refresh()
+            ns.SetTarget(55); ns.Render()
+            assert(ns.plan.prepared[1].used==28 and ns.plan.prepared[1].missing==0)
+            mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
+            assert(mats['Linen Cloth']==nil)''')
+
 if __name__=='__main__': unittest.main(verbosity=2)

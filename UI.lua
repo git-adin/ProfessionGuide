@@ -105,6 +105,7 @@ function ns.CreateUI()
     ns.warningText=text(ns.bodyFrame,"GameFontHighlightSmall",546)
     ns.shoppingTitle=text(ns.bodyFrame,"GameFontNormalLarge",546)
     ns.materialMessage=text(ns.bodyFrame,"GameFontHighlight",546)
+    ns.preparedText=text(ns.bodyFrame,"GameFontHighlightSmall",546)
     ns.tableHead={}
     for i,col in ipairs({{0,290,"Material"},{302,66,"Have"},{382,66,"Need"},{464,66,"Short"}}) do
         ns.tableHead[i]={label=text(ns.bodyFrame,"GameFontHighlightSmall",col[2],i==1 and "LEFT" or "RIGHT"),x=col[1],title=col[3]}
@@ -307,6 +308,15 @@ function ns.RenderRecipe(slug,skill)
 end
 
 function ns.RenderMaterials(y)
+    if ns.plan and #ns.plan.prepared>0 then
+        local lines={GOLD.."Prepared supplies|r"}
+        for _,m in ipairs(ns.plan.prepared) do
+            local icon=ns.ItemIcon(m.id)
+            lines[#lines+1]=(icon and ns.IconTag(icon) or "")..m.name..": "..GREEN.."use "..m.used.." from bags|r; still need "..m.missing.."."
+        end
+        lines[#lines+1]=MUTED.."Only the missing amount is expanded into raw materials below.\nSupplies made by earlier steps in this route are already accounted for.|r"
+        ns.preparedText:Show(); y=place(ns.preparedText,table.concat(lines,"\n"),0,y)+18
+    end
     y=place(ns.shoppingTitle,"Shopping list"..(ns.plan and ns.plan.minimum and " (minimum)" or "")..(ns.plan and "  "..MUTED.."to "..ns.plan.target.."|r" or ""),0,y)+12
     local materials=ns.plan and ns.plan.materials or {}
     for _,col in ipairs(ns.tableHead) do
@@ -360,7 +370,7 @@ function ns.Render(resetInput)
     if resetInput or not ns.targetInput:HasFocus() then ns.targetInput:SetText(target and tostring(target) or "") end
     ns.plan=skill and target and ns.Plan(slug,ns.player,target) or nil
     ns.BuildRoute(slug,skill)
-    ns.alternateMenu:Hide(); ns.optionButton:Hide(); ns.compareButton:Hide(); ns.compareText:Hide(); ns.choiceDeltaText:Hide(); ns.exportReviewText:Hide()
+    ns.alternateMenu:Hide(); ns.optionButton:Hide(); ns.compareButton:Hide(); ns.compareText:Hide(); ns.choiceDeltaText:Hide(); ns.exportReviewText:Hide(); ns.preparedText:Hide()
     local content={ns.stepHeading,ns.recipeText,ns.recipeIcon,ns.detailText,ns.warningText,ns.shoppingTitle,ns.materialMessage}
     for _,v in ipairs(content) do v:Hide() end
     for _,v in ipairs(ns.tableHead) do v.label:Hide() end
