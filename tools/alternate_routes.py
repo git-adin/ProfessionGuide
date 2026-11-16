@@ -1,4 +1,4 @@
-"""Reviewed branch definitions for the 2026-11-12 source snapshot.
+"""Reviewed branch definitions for the 2026-11-15 source snapshot.
 
 Only recipe facts are retained. Notes are original summaries. A minimum-count
 branch is explicitly flagged when the source gives ingredients but no estimate.
@@ -21,29 +21,36 @@ def build(guides, soups, recipe, items):
         groups.setdefault(slug,[]).append({'id':key,'label':label,'ranges':ranges,
             'options':[option('default','Guide default: '+default,[])]+list(options)})
     s,b,o=step,block,option
-    add('alchemy','starter','Starter elixir',[[1,10]],'Minor Arcane Elixir',
-        o('force','Elixir of Minor Force',[b(1,10,s(1,10,'9x Elixir of Minor Force - 9 Silverleaf, 9 Empty Vial'))]))
     add('alchemy','oil-mana','Oil or mana path',[[130,165]],'Fire Oil, then Fire Power',
         o('mana','Lesser Mana Potions (linked path)',[b(130,165,
             s(130,150,'20x Lesser Mana Potion - 20 Mageroyal, 20 Stranglekelp, 20 Empty Vial'),
             s(150,165,'22x Lesser Mana Potion - 22 Mageroyal, 22 Stranglekelp, 22 Empty Vial'))],
           'Changes both 130-150 and 150-165. This path does not need saved Fire Oil.'))
-    add('alchemy','finish','Finishing potion',[[265,300]],'Elixir of Greater Defense',
-        o('mana','Superior Mana Potion',[b(265,300,s(265,300,'55x Superior Mana Potion - 110 Sungrass, 110 Blindweed, 55 Crystal Vial'))],
-          'Buy Recipe: Superior Mana Potion from Algernon (Undercity) or Ulthir (Darnassus).'))
-    add('blacksmithing','silver','Belt or rod',[[75,80]],'Runed Copper Belt',
-        o('rod','Silver Rod',[b(75,80,s(75,80,'5x Silver Rod - 5 Silver Bar, 10 Rough Grinding Stone'))]))
+    add('alchemy','finish','Oil or mana finishing path',[[250,300]],'Stonescale Oil, then Greater Defense',
+        o('mana','Greater Intellect, then Superior Mana Potion',[b(250,300,
+            s(250,265,'21x Elixir of Greater Intellect - 21 Blindweed, 21 Khadgar\'s Whisker, 21 Crystal Vial'),
+            s(265,300,'55x Superior Mana Potion - 110 Sungrass, 110 Blindweed, 55 Crystal Vial'))],
+          'Changes 250-300 together. Skip Stonescale Oil. Superior Mana recipe: Algernon (Undercity) or Ulthir (Darnassus).'))
+    add('blacksmithing','silver','Belt or rod',[[75,80]],'Silver Rod',
+        o('belt','Runed Copper Belt',[b(75,80,s(75,80,'5x Runed Copper Belt - 50 Copper Bar'))]))
     add('blacksmithing','bronze','Bronze recipe',[[125,140]],'Bronze Shortsword',
         o('bracers','Patterned Bronze Bracers',[b(125,140,s(125,140,'24x Patterned Bronze Bracers - 120 Bronze Bar, 48 Coarse Grinding Stone'))]))
     add('blacksmithing','spurs','Mithril recipe',[[215,225]],'Heavy Mithril Breastplate',
         o('spurs','Mithril Spurs',[b(215,225,s(215,225,'10x Mithril Spurs - 40 Mithril Bar, 30 Solid Grinding Stone'))],
           'Requires Plans: Mithril Spurs, a world-drop recipe.'))
-    ebon=s(240,255,'15x Ebon Shiv - 180 Mithril Bar, 90 Truesilver Bar, 30 Star Ruby, 15 Solid Grinding Stone, 30 Thick Leather')
-    axe=s(255,270,'15x Ornate Thorium Handaxe - 300 Thorium Bar, 30 Large Opal, 30 Dense Grinding Stone, 60 Rugged Leather')
+    add('blacksmithing','spurs-late','Mithril boots or spurs',[[230,240]],'Heavy Mithril Boots',
+        o('spurs','Mithril Spurs',[b(230,240,s(230,240,'16x Mithril Spurs - 64 Mithril Bar, 48 Solid Grinding Stone'))],
+          'Requires world-drop Plans: Mithril Spurs.'))
+    bracers=s(255,270,'17x Imperial Plate Bracers - 340 Thorium Bar, 17 Star Ruby')
     add('blacksmithing','imperial','Imperial Plate alternative path',[[240,270]],'Imperial Plate quests',
-        o('ebon','Ebon Shiv, then Ornate Thorium Handaxe',[b(240,270,ebon,axe)],'Both plans: Magnus Frostwake, Western Plaguelands.'),
-        o('radiant','Radiant Belt, then Ornate Thorium Handaxe',[b(240,270,s(240,255,'15x Radiant Belt - 150 Thorium Bar, 30 Heart of Fire'),axe)],'Radiant Belt is a world-drop plan; handaxe plan: Magnus Frostwake.'),
-        o('thorium','Thorium Bracers, then Ornate Thorium Handaxe',[b(240,270,s(240,255,'17x Thorium Bracers - 204 Thorium Bar, 68 Blue Power Crystal'),axe)],'Thorium Bracers is a world-drop plan; handaxe plan: Magnus Frostwake.'))
+        o('rapier','Dazzling Mithril Rapier, then Imperial Plate Bracers',[b(240,270,
+            s(240,255,'27x Dazzling Mithril Rapier - 378 Mithril Bar, 27 Aquamarine, 54 Lesser Moonstone, 54 Moss Agate, 27 Solid Grinding Stone, 54 Mageweave Cloth'),bracers)],
+          'Requires world-drop rapier plans. After 255, resumes Imperial Plate Bracers (scaled estimate); that quest still needs level 50.'),
+        o('hammer','Runed Mithril Hammer, then Imperial Plate Bracers',[b(240,270,
+            s(240,255,'20x Runed Mithril Hammer - 360 Mithril Bar, 40 Core of Earth, 20 Solid Grinding Stone, 80 Thick Leather'),bracers)],
+          'Requires world-drop hammer plans. After 255, resumes Imperial Plate Bracers (scaled estimate); that quest still needs level 50.'),
+        o('thorium','Thorium Bracers, then Imperial Plate Bracers',[b(240,270,s(240,255,'17x Thorium Bracers - 204 Thorium Bar, 68 Blue Power Crystal'),bracers)],
+          'Requires world-drop Thorium Bracers plans. After 255, resumes Imperial Plate Bracers (scaled estimate); that quest still needs level 50.'))
     groups['blacksmithing'][-1]['options'][0].update(level=50,
         note='Imperial Plate recipe quests: Derotain Mudsipper, Tanaris. The lowered quest skill gates are unverified.')
     # Use the site's active dust tab as a consistent default, including 20-70.
@@ -56,13 +63,14 @@ def build(guides, soups, recipe, items):
             if not match: continue
             direct=' '.join(c.get_text(' ',strip=True) if getattr(c,'name',None) else str(c)
                 for c in li.contents if getattr(c,'name',None) not in ['p','ul','ol','details'])
+            direct=li.get('data-primary',direct)
             r=recipe(' '.join(direct.split()))
             if not r: raise ValueError(('Enchanting tab',direct))
             dest.append({'from':int(match[1]),'to':int(match[2]),'recipes':[r]})
     base=guides['enchanting']['steps']
     guides['enchanting']['steps']=[x for x in base if x['to']<=70]+dust+[x for x in base if x['from']>=150]
     essence_start=s(20,70,'50x Enchant Bracer - Minor Deflect - 50 Lesser Magic Essence')
-    train=essence[:3]+dust[3:]
+    train=[x for x in essence if x['to']<=110]+[x for x in dust if x['from']>=110]
     soul=dust[:-1]+[s(130,150,'20x Enchant Bracer - Lesser Stamina - 20 Soul Dust')]
     dust_start=[x for x in base if x['from']==20][0]
     add('enchanting','early-path','Dust or essence path',[[20,150]],'Strange Dust path',
@@ -77,38 +85,32 @@ def build(guides, soups, recipe, items):
     add('enchanting','lotus','Oil or enchant',[[250,265]],'Lesser Mana Oil',
         o('strength','Enchant Bracer - Greater Strength',[b(250,265,s(250,265,'15x Enchant Bracer - Greater Strength - 15 Dream Dust, 30 Lesser Nether Essence',True))],
           'Annora teaches this. Minimum craft count only: the source provides no estimate; allow extra materials.'))
-    add('enchanting','finish','Finishing enchant',[[295,300]],'Superior Defense',
-        o('shield','Enchant Shield - Greater Stamina',[b(295,300,s(295,300,'5x Enchant Shield - Greater Stamina - 30 Dream Dust',True))],
-          'Requires the vendor formula. Minimum craft count only; green skill-ups can require substantially more.'))
+    add('enchanting','finish','Final skill point',[[299,300]],'Runed Arcanite Rod',
+        o('shield','One more Greater Stamina shield enchant',[b(299,300,s(299,300,'1x Enchant Shield - Greater Stamina - 6 Dream Dust',True))],
+          'Source suggests one more shield instead if you do not need the rod yet. Minimum estimate; skill-up is not guaranteed.'))
     add('engineering','silver','Contacts or goggles',[[100,105]],'Silver Contact',
         o('goggles','Flying Tiger Goggles',[b(100,105,s(100,105,'5x Flying Tiger Goggles - 30 Light Leather, 10 Tigerseye'))]))
     add('engineering','scope','Scope or powder',[[125,135]],'Standard Scope',
         o('powder','Heavy Blasting Powder',[b(125,135,s(125,135,'10x Heavy Blasting Powder - 10 Heavy Stone',True))],
           'Minimum craft count only: source gives no estimate for this alternate. Save the powder for later steps.'))
-    add('leatherworking','starter','Starter materials',[[1,30]],'Ruined Leather Scraps',
-        o('kits','Light Armor Kits',[b(1,30,s(1,30,'29x Light Armor Kit - 29 Light Leather',True))],
-          'Uses bought Light Leather. Minimum craft count only; source gives no estimate.'))
-    add('leatherworking','light-hides','Light Hide path',[[30,55],[100,115]],'Kits, gloves and cloak',
-        o('hides','Cured Light Hides, then Light Leather Pants',[b(30,55,s(30,55,'27x Cured Light Hide - 27 Light Hide, 27 Salt')),
-            b(100,115,s(100,115,'24x Light Leather Pants - 240 Light Leather, 24 Cured Light Hide, 24 Fine Thread'))],
-          'Links 30-55 to 100-115. Keep 24 cured hides; skip the 45-55 gloves.'))
-    add('leatherworking','medium-hides','Medium Hide path',[[80,90],[115,125]],'Cured Medium Hides and Dark Leather Belts',
-        o('leather','Medium Leather instead of hides',[b(80,90,s(80,90,'11x Fine Leather Belt - 66 Light Leather, 22 Coarse Thread')),
-            b(115,125,s(115,120,'6x Dark Leather Pants - 72 Medium Leather, 6 Gray Dye, 6 Fine Thread'),
-                s(120,125,"5x Hillman's Leather Gloves - 70 Medium Leather, 20 Fine Thread"))],
-          'Changes 80-90 and 115-125 together; no saved Cured Medium Hides are needed.'))
-    add('leatherworking','heavy-hides','Heavy Hide path',[[130,175]],'Cured Heavy Hide path',
-        o('leather','Medium/Heavy Leather and Moss Agate',[b(130,175,
-            s(130,155,"30x Hillman's Leather Gloves - 420 Medium Leather, 120 Fine Thread"),
-            s(155,170,'17x Barbaric Leggings - 170 Heavy Leather, 34 Fine Thread, 17 Moss Agate'),
-            s(170,175,'5x Barbaric Harness - 70 Heavy Leather, 10 Fine Thread, 5 Iron Buckle'))],
-          'Barbaric Leggings pattern: Jandia, Keena, Hammon Karwn or Lardan. Guardian Gloves after 175 still need cured hides.'))
-    add('leatherworking','finish','Finishing headgear',[[285,300]],'Runic Leather Headband',
-        o('hat','Blue Suede Hat',[b(285,300,s(285,300,'15x Blue Suede Hat - 240 Rugged Leather, 60 Blue Dye, 15 Rune Thread'))],
-          'Requires the Blue Suede Hat pattern.'))
+    add('leatherworking','shoes','Gauntlets or shoes',[[235,265]],'Wicked Leather Gauntlets',
+        o('shoes','Blue Suede Shoes',[b(235,265,s(235,265,'36x Blue Suede Shoes - 288 Rugged Leather, 36 Blue Dye, 36 Rune Thread'))],
+          'Requires the Blue Suede Shoes pattern. Source compares vendor resale value; no live auction price is assumed.'))
+    add('leatherworking','finish','Finishing leatherwork',[[265,300]],'Runic Leather Headband',
+        o('bracers','Headbands to 275, then Blue Suede Bracers',[b(265,300,
+            s(265,275,'16x Runic Leather Headband - 224 Rugged Leather, 160 Runecloth, 16 Rune Thread'),
+            s(275,300,'27x Blue Suede Bracers - 270 Rugged Leather, 27 Blue Dye, 27 Rune Thread'))],
+          'Requires the bracers pattern. Opening headband count is scaled from the source 265-300 estimate.'),
+        o('hat','Headbands to 280, then Blue Suede Hat',[b(265,300,
+            s(265,280,'23x Runic Leather Headband - 322 Rugged Leather, 230 Runecloth, 23 Rune Thread'),
+            s(280,300,'20x Blue Suede Hat - 320 Rugged Leather, 80 Blue Dye, 20 Rune Thread'))],
+          'Requires the hat pattern and access to another leatherworker\'s Sewing Machine; your own needs skill 300. Opening headband count is scaled.'))
     add('tailoring','bags','Bags or belts',[[215,225]],'Mageweave Bag',
         o('belts','Runecloth Belt',[b(215,225,s(215,225,'10x Runecloth Belt - 30 Bolt of Runecloth, 10 Rune Thread'))],
           'Requires Artisan Tailoring, even though this step is below 225.',35))
+    add('tailoring','finish','Final tailoring recipe',[[280,300]],'Runecloth Shoulders',
+        o('turban','Wizardweave Turban',[b(280,300,s(280,300,'58x Wizardweave Turban - 348 Bolt of Runecloth, 232 Dream Dust, 58 Star Ruby'))],
+          'Requires a rare pattern; check availability before buying materials. Both 280-300 options depend on world-drop patterns.'))
     add('first-aid','starter','Bandages or potions',[[1,75]],'Linen bandages',
         o('potions','Minor Healing Potion',[b(1,75,s(1,75,'81x Minor Healing Potion - 81 Peacebloom, 81 Mild Spices, 81 Empty Vial'))],
           'Mild Spices: Cooking supply vendors. Empty Vial: Alchemy supply vendors.'))
@@ -121,6 +123,10 @@ def build(guides, soups, recipe, items):
             if match: lo,hi=map(int,match.groups())
             continue
         rows=[r for r in el.select('tr') if r.find('td')]
+        ancestor=el.find_parent('li',class_='route-step')
+        if ancestor:
+            match=re.fullmatch(r'(\d+)-(\d+)',ancestor.find('b',recursive=False).get_text(strip=True))
+            if match: lo,hi=map(int,match.groups())
         opts=[]
         for row in rows:
             cells=row.find_all('td',recursive=False)
@@ -142,7 +148,14 @@ def build(guides, soups, recipe, items):
                 'Recipe source: '+source,1,faction))
         if len(opts)>1: add('cooking','recipe-'+str(lo),'Cooking recipe',[[lo,hi]],opts[0]['label'],*opts[1:])
 
+    for group in groups.get('cooking',[]):
+        if group['id']=='recipe-150':
+            group['options'].append(o('catfish','Bristle Whisker Catfish',[b(150,175,
+                s(150,175,'90x Bristle Whisker Catfish - 90 Raw Bristle Whisker Catfish'))],
+                'Source estimates about 90; this recipe is green from 160.'))
+
     items.update({'Dense Grinding Stone':12644,'Iron Buckle':7071,'Cured Light Hide':4231,
         'Blue Power Crystal':11184,'Heart of Fire':7077,'Large Opal':12799,
-        'Lesser Nether Essence':11174,'Truesilver Bar':6037})
+        'Lesser Nether Essence':11174,'Truesilver Bar':6037,'Core of Earth':7075,
+        'Cured Heavy Hide':4236,'Lesser Moonstone':1705,'Stonescale Oil':13423})
     return groups

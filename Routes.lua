@@ -23,9 +23,12 @@ ns.TrainerHints = {
     enchanting="Expert: Kitta Firewind, Tower of Azora / Hgarth, Sun Rock Retreat. Artisan: Annora, Uldaman.",
     engineering="Expert: Springspindle Fizzlegear, Ironforge / Roxxik, Orgrimmar. At skill 200, visit Buzzek Bracketswing in Gadgetzan for Artisan recipes (level 35). Keep a Blacksmith Hammer.",
     leatherworking="Expert: Telonis, Darnassus / Una, Thunder Bluff. At skill 205, Nightscape Pants require an Artisan trainer: Drakk Stonehand, Aerie Peak / Hahrana Ironhide, Camp Mojache (level 35).",
-    tailoring="Expert: Georgio Bolero, Stormwind / Josef Gregorian, Undercity. Artisan: Timothy Worthington, Theramore / Daryl Stack, Tarren Mill.",
-    ["first-aid"]="Expert book: Deneb Walker, Arathi Highlands / Balai Lok'Wein, Dustwallow Marsh. Buy the Heavy Silk and Mageweave manuals too. Artisan requires Triage (skill 225, level 35). Major Healing Potion needs a drop-only manual.",
+    tailoring="Expert: Georgio Bolero, Stormwind / Josef Gregorian, Undercity. Artisan recipes start at 200: Timothy Worthington, Theramore / Daryl Stack, Tarren Mill. Runecloth Cuffs pattern: Pexmit, Mount Hyjal. Past 280, check rare pattern availability before buying materials.",
+    ["first-aid"]="Expert book: Deneb Walker, Arathi Highlands / Balai Lok'Wein, Dustwallow Marsh. Buy the Heavy Silk and Mageweave manuals too. Artisan requires Triage (skill 225, level 35). Major Healing Potion manual: Pexmit, Mount Hyjal, or A Rest Without Pain in Elderwild, Mount Hyjal.",
     cooking="Expert Cookbook: Shandrina, Ashenvale / Wulan, Desolace. Artisan: Dirge Quikcleave's Clamlette Surprise, Gadgetzan (skill 225, level 35). Buy fish recipes from vendors; cook beside a fire.",
+    mining="Junior starting-area trainers stop at 75; visit the full trainer or a capital for Journeyman. Optional Alliance bonus: Twilight Mine Light (+4 Mining), reward from A Miner Problem in Riverglades.",
+    herbalism="Junior starting-area trainers stop at 75. Dwarves and gnomes can visit Reyna Stonebranch in Ironforge after the junior trainer.",
+    skinning="Junior starting-area trainers stop at 75. Optional Horde bonus: Keen Skinning Knife (+3 Skinning), reward from Unwelcome Guests in The Barrens.",
 }
 ns.ItemIDs["Giant Egg"],ns.ItemIDs["Zesty Clam Meat"],ns.ItemIDs["Alterac Swiss"]=12207,7974,8932
 -- Original compact instructions; factual ranges/locations from the linked guides.
@@ -47,8 +50,8 @@ route("mining", {
 })
 route("herbalism", {
     {1,70,"Gather starter herbs. Enable Find Herbs.","Starting zones", "Starting zones"},
-    {70,115,"Gather Mageroyal, Briarthorn and Bruiseweed.","Loch Modan or Darkshore", "The Barrens or Silverpine Forest"},
-    {115,170,"Gather Bruiseweed, Wild Steelbloom and Kingsblood.","Hillsbrad Foothills or Ashenvale", "Hillsbrad Foothills or Ashenvale"},
+    {70,115,"Gather Mageroyal and Briarthorn; Stranglekelp unlocks at 85.","Loch Modan or Darkshore", "Silverpine Forest"},
+    {115,170,"Gather Bruiseweed, Wild Steelbloom and Stranglekelp. Kingsblood needs 125; Liferoot needs 150.","Hillsbrad Foothills or Stonetalon Mountains", "Hillsbrad Foothills or Stonetalon Mountains"},
     {170,205,"Gather Kingsblood, Liferoot, Fadeleaf and Goldthorn.","Arathi Highlands or Stranglethorn Vale", "Arathi Highlands or Stranglethorn Vale"},
     {205,230,"Gather Purple Lotus and Firebloom. Train Artisan before leaving town.","Tanaris or Searing Gorge", "Tanaris or Searing Gorge"},
     {230,270,"Gather Sungrass and Purple Lotus; Ghost Mushroom needs 245.","The Hinterlands", "The Hinterlands"},

@@ -1,6 +1,6 @@
 # Source provenance
 
-Snapshot date: **2026-11-12**. Recipe names, skill ranges, estimated craft counts,
+Snapshot date: **2026-11-15** (refreshed from November 12). Recipe names, skill ranges, estimated craft counts,
 ingredient quantities and location facts were checked against the pages below.
 Guide prose and maps are not bundled. UI instructions are original summaries.
 Upstream guides describe beta-derived and untested higher-level content; the
@@ -36,9 +36,10 @@ Where the source gives ingredients but no craft count, explicit minimum estimate
 are marked in the compiled data and UI. Lesser Agility 165–185 uses 22 crafts,
 inferred from the source alternative shopping list (39 Soul Dust minus the rod
 and oil requirements). Smoked Bear Meat uses the upper end of its source range.
-Tailoring 265–300 has no source recipe and is deliberately unavailable. The
-Leatherworking 1–30 estimate of 100 scraps for 33 crafts is normalized to the
-actual whole-craft ratio of three scraps. Fire Oil produces two per craft.
+Tailoring now has a complete 1–300 route, with rare-pattern and station caveats.
+Leatherworking 1–30 now uses the source's 35 crafts and 105 scraps. Fire Oil and
+Stonescale Oil produce two per craft. See [SOURCE_UPDATE_AUDIT.md](SOURCE_UPDATE_AUDIT.md)
+for changed ranges, removed branches, manual sources and gathering corrections.
 
 Client compatibility was cross-checked against installed Forever addons' use of
 `C_SkillInfo`, legacy skill APIs and profession APIs, and ItemFarmingTool 0.2.2's

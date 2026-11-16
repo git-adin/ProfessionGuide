@@ -1,4 +1,4 @@
-# ProfessionGuide 0.3.1
+# ProfessionGuide 0.4.0
 
 An independent WoW Forever addon (Interface 16001) with character-aware profession
 routes and optional, explicit exports to ItemFarmingTool. No addon dependency,
@@ -54,13 +54,13 @@ generic logo for legacy recipe spell IDs.
 
 ## Recipe alternatives
 
-Version 0.3.0 includes **47 alternates in 28 choice groups** across the crafting
+The November 15 refresh includes **39 alternates in 25 choice groups** across the crafting
 professions, Cooking and First Aid. The selector appears only for affected steps.
 Use **Compare alternatives** to expand each option's recipe source, requirements
 and ingredient changes for your full target. Counts do not compare auction prices.
 
-Selections save per character and profession. Alchemy's oil/mana route,
-Enchanting's dust/essence paths and Leatherworking's saved-hide paths change as
+Selections save per character and profession. Alchemy's oil/mana routes,
+Enchanting's dust/essence paths and high-level Leatherworking choices change as
 one choice, including later dependent steps. Enchanting now defaults consistently
 to the source's active Strange Dust path. You can restore **Guide default** in
 each selector. Different unrelated choice groups can be combined.
@@ -79,12 +79,13 @@ ItemFarmingTool automatically.
 ## Estimates and limitations
 
 The bundled factual route snapshot comes from [WoW-Professions.com's Forever
-guides](https://www.wow-professions.com/forever), retrieved November 12, 2026.
+guides](https://www.wow-professions.com/forever), refreshed November 15, 2026.
 Instructions are condensed and rewritten; this is not the full website, its maps,
 or every informal recipe suggestion. See [SOURCES.md](SOURCES.md).
 
-- **Tailoring ends at 265**, matching the available source route. A higher target
-  shows an explicit coverage warning. Other default crafting routes reach 300.
+- **Tailoring now reaches 300**, but after 280 it requires a rare/world-drop
+  pattern. Read the availability warnings before purchasing materials. All default
+  crafting routes now reach 300. [Source review details](SOURCE_UPDATE_AUDIT.md).
 - Several source routes at higher skill are provisional. In particular,
   Blacksmithing's Imperial Plate quest skill gates are unverified in the source;
   that route requires character level 50. Check availability before purchasing.
@@ -98,8 +99,9 @@ or every informal recipe suggestion. See [SOURCES.md](SOURCES.md).
   are not included. Raw leather and metal bars are shopping inputs.
   **Prepared supplies** shows each intermediate checked, how many carried items
   are credited, and how many are still needed after planned route output. For
-  example, 37 Cured Heavy Hides needed minus 11 carried means ingredients for 26:
-  26 Heavy Hides and 78 Salt. Raw Heavy Hides and Cured Heavy Hides use distinct
+  example, the refreshed 164–195 Leatherworking route needs 21 Cured Heavy Hides;
+  11 carried leaves ingredients for 10: 10 Heavy Hides and 30 Salt.
+  Raw Heavy Hides and Cured Heavy Hides use distinct
   item IDs; owning one never counts as owning the other. Inventory events update
   both the credit and the remaining raw-material totals.
 - Materials show totals for the remaining route and your current carried count.
@@ -155,9 +157,18 @@ UI callbacks and detection fallbacks, and tests opt-in exports against both a
 test double and the actual sibling ItemFarmingTool when present. The packager
 checks the ZIP's contents and CRCs and writes SHA-256 checksums.
 
-For a source refresh, install `beautifulsoup4` for development, run
-`tools/inspect_source.py` with the eight crafting-guide slugs listed in
-`tools/build_data.py`, then run `tools/build_data.py`. Reviewed alternate branches
+For a source refresh, install `beautifulsoup4` for development, then fetch fresh
+pages without overwriting the previous cache:
+
+```powershell
+python tools/check_sources.py --date YYYY-MM-DD
+python tools/build_data.py --cache-dir tools/.source-cache/checked-YYYY-MM-DD --source-date YYYY-MM-DD
+```
+
+Pass `--details` to the checker for changed passages. The old `inspect_source.py`
+only fills missing cache files and must not be used to check for fresh updates.
+After reviewing the changes, promote the checked HTML to the baseline cache and
+record its manifest. Reviewed alternate branches
 live in `tools/alternate_routes.py`; Cooking options are read from the source tables.
 Review all changed ranges,
 recipe yields, branches, IDs, trainer/quest notes and source dates before shipping.

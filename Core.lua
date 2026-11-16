@@ -12,12 +12,14 @@ function ns.LoadSettings()
     end
     ns.db.targets=targets
     local choices={}
+    local retiredChoices=0
     if type(ns.db.choices)=="table" then
         for slug,entries in pairs(ns.db.choices) do
             if ns.Professions[slug] and type(entries)=="table" then
                 choices[slug]={}
                 for groupID,optionID in pairs(entries) do
-                    if ns.FindChoice(slug,groupID,optionID) then choices[slug][groupID]=optionID end
+                    if ns.FindChoice(slug,groupID,optionID) then choices[slug][groupID]=optionID
+                    else retiredChoices=retiredChoices+1 end
                 end
             end
         end
@@ -35,6 +37,9 @@ function ns.LoadSettings()
         end
     end
     ns.db.exports=exports
+    if retiredChoices>0 then ns.status="Source guides updated. Retired recipe choices were reset; review your route and farming goals."
+    elseif ns.db.sourceDate~=ns.SourceDate and next(targets) then ns.status="Source guides updated to "..ns.SourceDate..". Review the new route and any previously exported goals." end
+    ns.db.sourceDate=ns.SourceDate
     if not ns.Professions[ns.db.selected] then ns.db.selected=nil end
     ns.db.hidden=ns.db.hidden~=false -- stay quiet until first /pg
     ns.db.minimapButton=ns.db.minimapButton~=false

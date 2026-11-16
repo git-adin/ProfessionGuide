@@ -272,6 +272,7 @@ function ns.RenderRecipe(slug,skill)
     local icon=ns.ProfessionIcon(slug)
     if step then
         local original=sourceStep(slug,step)
+        if original and original.note and not ns.plan then details[#details+1]=original.note end
         for i,r in ipairs(recipes) do
             local recipe=original and original.recipes and original.recipes[i]
             local recipeIcon=recipe and ns.RecipeIcon(recipe.spell)
@@ -391,9 +392,9 @@ function ns.Render(resetInput)
             notes[#notes+1]="\nKeep crafted intermediate supplies for later steps. Missing intermediates are expanded into ingredients; carried intermediates reduce those needs."
             notes[#notes+1]="\nTools, books, recipe purchases and training fees are separate. Imperial Plate recipe bars and Artisan Cooking quest supplies are included when needed."
             notes[#notes+1]="\nExport adds minimum total goals. Higher existing goals are preserved. Old goals are not removed; shared items across separate plans are not added together."
-            notes[#notes+1]="\nSource: WoW-Professions.com (2026-11-12)\n"..ns.Guides[slug].source
+            notes[#notes+1]="\nSource: WoW-Professions.com ("..ns.SourceDate..")\n"..ns.Guides[slug].source
             notes[#notes+1]="\nRecipe option selects a default or alternate path. Linked steps change together. Compare alternatives shows material changes for the full target. Choices save per character and profession. No farming goals change until you export."
-            notes[#notes+1]="\nHigher-level routes are provisional; Tailoring ends at 265. Some alternates have minimum counts only. No live auction prices or automatic crafting."
+            notes[#notes+1]="\nSome high-level routes still have unverified requirements. Tailoring reaches 300 but needs rare patterns after 280. Some alternates have minimum counts only. No live auction prices or automatic crafting."
             if slug=="lockpicking" then notes[#notes+1]="\nLockpicking cap: five times your character level, up to 300." end
         else
             notes={GOLD.."No profession detected|r","","Learn a profession, then click Refresh. Expand collapsed categories in the Skills panel if a profession is missing."}

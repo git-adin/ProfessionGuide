@@ -5,7 +5,7 @@ import hashlib, re
 ROOT=Path(__file__).resolve().parents[1]
 toc=(ROOT/'ProfessionGuide.toc').read_text()
 files=[line.strip() for line in toc.splitlines() if line.strip() and not line.startswith('#')]
-files+=['ProfessionGuide.toc','README.md','SOURCES.md','LICENSE']
+files+=['ProfessionGuide.toc','README.md','SOURCES.md','SOURCE_UPDATE_AUDIT.md','LICENSE']
 version=re.search(r'^## Version: (.+)$',toc,re.M)[1]
 out=ROOT/'dist'; out.mkdir(exist_ok=True)
 for name in ['ProfessionGuide.zip',f'ProfessionGuide-{version}.zip']:

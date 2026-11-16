@@ -55,6 +55,8 @@ function ns.Plan(slug, player, target, choices)
         if s.to>skill.rank and s.from<limit then
             local lo,hi=math.max(skill.rank,s.from),math.min(limit,s.to)
             local step={from=lo,to=hi,action=s.action,recipes={}}
+            if s.note then plan.warnings[#plan.warnings+1]=s.note end
+            if s.level and player.level<s.level then plan.warnings[#plan.warnings+1]="This recipe requires character level "..s.level.."." end
             local zone=player.faction=="Horde" and s.horde or s.alliance
             if zone then step.action=(step.action or "").." Location: "..zone.."." end
             for _,r in ipairs(s.recipes or {}) do
