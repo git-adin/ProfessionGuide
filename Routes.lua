@@ -32,12 +32,12 @@ ns.TrainerHints = {
 }
 ns.ItemIDs["Giant Egg"],ns.ItemIDs["Zesty Clam Meat"],ns.ItemIDs["Alterac Swiss"]=12207,7974,8932
 -- Original compact instructions; factual ranges/locations from the linked guides.
-local function route(slug, rows)
+local function route(slug, rows, cap)
     local steps = {}
     for _, row in ipairs(rows) do
         steps[#steps+1] = {from=row[1], to=row[2], action=row[3], alliance=row[4], horde=row[5]}
     end
-    ns.Guides[slug] = {cap=300, steps=steps,
+    ns.Guides[slug] = {cap=cap or 300, steps=steps,
         source="https://www.wow-professions.com/forever/"..slug.."-leveling-guide"}
 end
 route("mining", {
@@ -75,8 +75,8 @@ route("lockpicking", {
     {100,150,"Open Waterlogged Footlockers.","Zoram Strand, Ashenvale", "Zoram Strand, Ashenvale"},
     {150,200,"Open upstairs footlockers at 150; downstairs ones need 175.","Angor Fortress, Badlands", "Angor Fortress, Badlands"},
     {200,250,"Open lower-area footlockers until 225, then the upper area. Pickpocket for junkboxes.","The Slag Pit, Searing Gorge", "The Slag Pit, Searing Gorge"},
-    {250,300,"Pick locks on Blackrock Depths doors and the Shadowforge Lock. Pickpocket Heavy Junkboxes; dungeon entry limits apply."},
-})
+    {250,270,"Pick BRD doors and the Shadowforge Lock. Source reports slow skill-ups to about 270 even after locks turn grey at 265; this behavior is unverified. Dungeon entry limits apply. No verified 270-300 route is available from this source."},
+},270)
 
 -- Rank thresholds are not necessarily route boundaries.
 function ns.RankRequirements(slug)

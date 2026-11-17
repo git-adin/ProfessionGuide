@@ -1,4 +1,27 @@
-# Upstream guide review — November 15, 2026
+# Upstream guide review — November 17, 2026
+
+Fetched all 13 supported guides again and compared them with the November 15
+baseline. All pages changed, but several changes were only the new completion /
+feedback footer. Relevant changes applied in version 0.4.1:
+
+| Guide | Changes since November 15 |
+| --- | --- |
+| Alchemy | Removed the no-longer-listed Lesser Mana Potion alternative at 130-165. Source shopping-list Kingsblood moved from 36 to 51 to include the Fire Power step; our route calculator already included it. Retained the separate 250-300 finishing alternate. |
+| Blacksmithing | The Spurs tab is now a linked 215-245 route: 10 Spurs, 5 Dense Sharpening Stones, then 33 Spurs at 230-245. It skips Imperial Plate Belt. Conflicting 240-270 alternates are exclusive rather than combined into a broken route. |
+| Enchanting | Dust path now uses 23 chest enchants at 70-85 and 15 bracer enchants at 85-100. Essence path adds 23 Greater Magic Wands at 110-125, then 37 Lesser Intellect enchants at 125-150; its trainer alternate uses 25 Minor Stamina boots at 125-150. |
+| Leatherworking | Shoulders return to 155-165 (10 crafts), followed by 20 Guardian Gloves at 165-185. This reduces leather requirements while preserving the cured-hide credit. |
+| Tailoring | Added the optional Horde Runecloth Cuffs pattern quest: Threading a Solution, Kal'tinzan in Elderwild, level 54 and 6 bolts. Its skill requirement remains unverified; the Pexmit vendor route is still available. |
+| Cooking | Removed Nyalah Brightfire from the affected fish-recipe vendor lists, matching the source. Recipe quantities are unchanged. |
+| Lockpicking | BRD coverage is now 250-270, with an explicit caveat about slow skill-ups after the locks turn grey. The source cannot verify a 270-300 route. The addon now stops route coverage at 270 instead of sending players back to BRD through 300. |
+| Other guides | Engineering, First Aid, Mining, Herbalism, Skinning and Fishing changed only their completion/feedback footer. No new route facts were found. |
+
+Retired saved choices reset to the current source default; surviving choices,
+targets and export history are retained. No ItemFarmingTool goals are edited by
+this refresh. Review goals after changing routes. Source accuracy and in-game
+skill-up behavior remain separate; anecdotal and unverified source details are
+labeled.
+
+## Previous review — November 15, 2026
 
 Compared fresh downloads of all **13 supported profession guides** with the
 November 12 source cache. Refreshed the compiled routes and manually reviewed

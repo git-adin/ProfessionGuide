@@ -24,6 +24,7 @@ function ns.LoadSettings()
             end
         end
     end
+    for slug,entries in pairs(choices) do choices[slug]=ns.NormalizeChoices(slug,entries) end
     ns.db.choices=choices
     local exports={}
     if type(ns.db.exports)=="table" then

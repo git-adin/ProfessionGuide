@@ -10,6 +10,7 @@ function ns.BagCount(name)
     return type(count)=="number" and math.max(0,count) or 0
 end
 function ns.Plan(slug, player, target, choices)
+    choices=ns.NormalizeChoices(slug,choices or ns.ActiveChoices(slug))
     local guide, meta=ns.Guides[slug], ns.Professions[slug]
     local skill=player.professions[slug]
     if not skill then return nil,"Profession not detected. Learn it or expand the Skills panel." end
@@ -54,7 +55,7 @@ function ns.Plan(slug, player, target, choices)
         learn(s)
         if s.to>skill.rank and s.from<limit then
             local lo,hi=math.max(skill.rank,s.from),math.min(limit,s.to)
-            local step={from=lo,to=hi,action=s.action,recipes={}}
+            local step={from=lo,to=hi,action=s.action,choiceGroupID=s.choiceGroupID,recipes={}}
             if s.note then plan.warnings[#plan.warnings+1]=s.note end
             if s.level and player.level<s.level then plan.warnings[#plan.warnings+1]="This recipe requires character level "..s.level.."." end
             local zone=player.faction=="Horde" and s.horde or s.alliance

@@ -1,6 +1,6 @@
 # Source provenance
 
-Snapshot date: **2026-11-15** (refreshed from November 12). Recipe names, skill ranges, estimated craft counts,
+Snapshot date: **2026-11-17** (previous review November 15). Recipe names, skill ranges, estimated craft counts,
 ingredient quantities and location facts were checked against the pages below.
 Guide prose and maps are not bundled. UI instructions are original summaries.
 Upstream guides describe beta-derived and untested higher-level content; the

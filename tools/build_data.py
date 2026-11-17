@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 ROOT = Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--cache-dir',type=Path,default=ROOT/'tools/.source-cache')
-parser.add_argument('--source-date',default='2026-11-15')
+parser.add_argument('--source-date',default='2026-11-17')
 args=parser.parse_args()
 SLUGS = ['alchemy','blacksmithing','enchanting','engineering','leatherworking','tailoring','first-aid','cooking']
 items, spells, recipe_icons = {}, {}, {}
@@ -154,7 +154,7 @@ reviewed_notes={
     ('engineering',285):'Buy the bind-on-pickup Thorium Tube schematic from Xizzer Fizzbolt in Everlook, Winterspring, on this character.',
     ('tailoring',200):'These shoulders require an Artisan trainer; the Expert trainers do not teach them.',
     ('tailoring',240):'Runecloth Gloves pattern: Qia, Winterspring.',
-    ('tailoring',250):'Runecloth Cuffs pattern: Pexmit, Mount Hyjal. Bind on pickup; buy it on this character.',
+    ('tailoring',250):'Runecloth Cuffs pattern: Pexmit, Mount Hyjal (bind on pickup). Optional Horde quest source: Threading a Solution from Kal\'tinzan, Elderwild, Mount Hyjal; level 54 and 6 Bolt of Runecloth. Quest skill requirement is unverified.',
     ('tailoring',280):'Requires the world-drop Runecloth Shoulders pattern. Check availability before buying. Wizardweave Turban is an alternate; Loom recipes require another tailor\'s Loom and Cenarion Circle reputation (see source).',
     ('first-aid',275):'Major Healing Potion manual: Pexmit, Mount Hyjal, or A Rest Without Pain in Elderwild, Mount Hyjal.',
 }

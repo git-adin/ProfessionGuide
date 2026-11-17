@@ -1,4 +1,4 @@
-"""Reviewed branch definitions for the 2026-11-15 source snapshot.
+"""Reviewed branch definitions for the 2026-11-17 source snapshot.
 
 Only recipe facts are retained. Notes are original summaries. A minimum-count
 branch is explicitly flagged when the source gives ingredients but no estimate.
@@ -21,11 +21,6 @@ def build(guides, soups, recipe, items):
         groups.setdefault(slug,[]).append({'id':key,'label':label,'ranges':ranges,
             'options':[option('default','Guide default: '+default,[])]+list(options)})
     s,b,o=step,block,option
-    add('alchemy','oil-mana','Oil or mana path',[[130,165]],'Fire Oil, then Fire Power',
-        o('mana','Lesser Mana Potions (linked path)',[b(130,165,
-            s(130,150,'20x Lesser Mana Potion - 20 Mageroyal, 20 Stranglekelp, 20 Empty Vial'),
-            s(150,165,'22x Lesser Mana Potion - 22 Mageroyal, 22 Stranglekelp, 22 Empty Vial'))],
-          'Changes both 130-150 and 150-165. This path does not need saved Fire Oil.'))
     add('alchemy','finish','Oil or mana finishing path',[[250,300]],'Stonescale Oil, then Greater Defense',
         o('mana','Greater Intellect, then Superior Mana Potion',[b(250,300,
             s(250,265,'21x Elixir of Greater Intellect - 21 Blindweed, 21 Khadgar\'s Whisker, 21 Crystal Vial'),
@@ -35,12 +30,13 @@ def build(guides, soups, recipe, items):
         o('belt','Runed Copper Belt',[b(75,80,s(75,80,'5x Runed Copper Belt - 50 Copper Bar'))]))
     add('blacksmithing','bronze','Bronze recipe',[[125,140]],'Bronze Shortsword',
         o('bracers','Patterned Bronze Bracers',[b(125,140,s(125,140,'24x Patterned Bronze Bracers - 120 Bronze Bar, 48 Coarse Grinding Stone'))]))
-    add('blacksmithing','spurs','Mithril recipe',[[215,225]],'Heavy Mithril Breastplate',
-        o('spurs','Mithril Spurs',[b(215,225,s(215,225,'10x Mithril Spurs - 40 Mithril Bar, 30 Solid Grinding Stone'))],
-          'Requires Plans: Mithril Spurs, a world-drop recipe.'))
-    add('blacksmithing','spurs-late','Mithril boots or spurs',[[230,240]],'Heavy Mithril Boots',
-        o('spurs','Mithril Spurs',[b(230,240,s(230,240,'16x Mithril Spurs - 64 Mithril Bar, 48 Solid Grinding Stone'))],
-          'Requires world-drop Plans: Mithril Spurs.'))
+    add('blacksmithing','spurs','Mithril path',[[215,245]],'Heavy Mithril path',
+        o('spurs','Mithril Spurs path (215-245)',[b(215,245,
+            s(215,225,'10x Mithril Spurs - 40 Mithril Bar, 30 Solid Grinding Stone'),
+            s(225,230,'5x Dense Sharpening Stone - 5 Dense Stone'),
+            s(230,245,'33x Mithril Spurs - 132 Mithril Bar, 99 Solid Grinding Stone'))],
+          'Requires world-drop Plans: Mithril Spurs. Skips Imperial Plate Belt. Replaces any selected 240-270 alternate path.'))
+    groups['blacksmithing'][-1]['conflicts']=['imperial']
     bracers=s(255,270,'17x Imperial Plate Bracers - 340 Thorium Bar, 17 Star Ruby')
     add('blacksmithing','imperial','Imperial Plate alternative path',[[240,270]],'Imperial Plate quests',
         o('rapier','Dazzling Mithril Rapier, then Imperial Plate Bracers',[b(240,270,
@@ -53,6 +49,7 @@ def build(guides, soups, recipe, items):
           'Requires world-drop Thorium Bracers plans. After 255, resumes Imperial Plate Bracers (scaled estimate); that quest still needs level 50.'))
     groups['blacksmithing'][-1]['options'][0].update(level=50,
         note='Imperial Plate recipe quests: Derotain Mudsipper, Tanaris. The lowered quest skill gates are unverified.')
+    groups['blacksmithing'][-1]['conflicts']=['spurs']
     # Use the site's active dust tab as a consistent default, including 20-70.
     dust=[]; essence=[]
     for tab,dest in [('tab2-70-150',dust),('tab1-70-150',essence)]:
@@ -70,7 +67,7 @@ def build(guides, soups, recipe, items):
     base=guides['enchanting']['steps']
     guides['enchanting']['steps']=[x for x in base if x['to']<=70]+dust+[x for x in base if x['from']>=150]
     essence_start=s(20,70,'50x Enchant Bracer - Minor Deflect - 50 Lesser Magic Essence')
-    train=[x for x in essence if x['to']<=110]+[x for x in dust if x['from']>=110]
+    train=[x for x in essence if x['to']<=125]+[s(125,150,'25x Enchant Boots - Minor Stamina - 100 Strange Dust')]
     soul=dust[:-1]+[s(130,150,'20x Enchant Bracer - Lesser Stamina - 20 Soul Dust')]
     dust_start=[x for x in base if x['from']==20][0]
     add('enchanting','early-path','Dust or essence path',[[20,150]],'Strange Dust path',

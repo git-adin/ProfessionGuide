@@ -14,7 +14,23 @@ function ns.SelectedOption(slug,group,choices)
     local _,option=ns.FindChoice(slug,group.id,(choices or ns.ActiveChoices(slug))[group.id] or "default")
     return option or group.options[1]
 end
+function ns.NormalizeChoices(slug,choices)
+    local clean={}; for k,v in pairs(choices) do clean[k]=v end
+    for _,group in ipairs(ns.Alternates[slug] or {}) do
+        if ns.SelectedOption(slug,group,clean).id~="default" then
+            for _,conflict in ipairs(group.conflicts or {}) do clean[conflict]=nil end
+        end
+    end
+    return clean
+end
+function ns.ChoiceOverrides(slug,group,optionID)
+    local choices={}; for k,v in pairs(ns.ActiveChoices(slug)) do choices[k]=v end
+    choices[group.id]=optionID~="default" and optionID or nil
+    if optionID~="default" then for _,conflict in ipairs(group.conflicts or {}) do choices[conflict]=nil end end
+    return ns.NormalizeChoices(slug,choices)
+end
 function ns.GetGuideSteps(slug,choices)
+    choices=ns.NormalizeChoices(slug,choices or ns.ActiveChoices(slug))
     local steps={}
     for _,step in ipairs(ns.Guides[slug].steps) do steps[#steps+1]=step end
     for _,group in ipairs(ns.Alternates[slug] or {}) do
@@ -24,7 +40,10 @@ function ns.GetGuideSteps(slug,choices)
             for _,step in ipairs(steps) do
                 if step.to<=block.from or step.from>=block.to then nextSteps[#nextSteps+1]=step end
             end
-            for _,step in ipairs(block.steps) do nextSteps[#nextSteps+1]=step end
+            for _,step in ipairs(block.steps) do
+                local copy={}; for k,v in pairs(step) do copy[k]=v end
+                copy.choiceGroupID=group.id; nextSteps[#nextSteps+1]=copy
+            end
             steps=nextSteps
         end
     end
@@ -33,11 +52,14 @@ function ns.GetGuideSteps(slug,choices)
 end
 function ns.GroupForStep(slug,step)
     if not step then return end
+    local best,start
     for _,group in ipairs(ns.Alternates[slug] or {}) do
+        if group.id==step.choiceGroupID then return group end
         for _,range in ipairs(group.ranges) do
-            if step.to>range[1] and step.from<range[2] then return group end
+            if step.to>range[1] and step.from<range[2] and (not start or range[1]>start) then best,start=group,range[1] end
         end
     end
+    return best
 end
 function ns.MaterialDelta(before,after)
     if not before or not after then return "Choose a target to compare material totals." end
@@ -58,8 +80,7 @@ end
 function ns.CompareChoice(slug,group,option)
     local target=ns.db.targets[slug]
     if not target then return "Choose a target to compare material totals." end
-    local choices={}; for k,v in pairs(ns.ActiveChoices(slug)) do choices[k]=v end
-    choices[group.id]=option.id
+    local choices=ns.ChoiceOverrides(slug,group,option.id)
     return ns.MaterialDelta(ns.Plan(slug,ns.player,target),ns.Plan(slug,ns.player,target,choices))
 end
 function ns.SetChoice(slug,groupID,optionID)
@@ -67,8 +88,7 @@ function ns.SetChoice(slug,groupID,optionID)
     if not option then return false,"Unknown alternate." end
     if option.faction and ns.player.faction~=option.faction then return false,"This alternate is for "..option.faction.." only." end
     local before=ns.db.targets[slug] and ns.Plan(slug,ns.player,ns.db.targets[slug])
-    ns.db.choices[slug]=ns.db.choices[slug] or {}
-    ns.db.choices[slug][groupID]=optionID~="default" and optionID or nil
+    ns.db.choices[slug]=ns.ChoiceOverrides(slug,group,optionID)
     local after=ns.db.targets[slug] and ns.Plan(slug,ns.player,ns.db.targets[slug])
     ns.choiceDelta=ns.MaterialDelta(before,after)
     local old=ns.selectedStep

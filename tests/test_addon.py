@@ -386,37 +386,38 @@ class AddonTests(unittest.TestCase):
             assert(ns.minimapButton.point[4]<108)''')
 
     def test_linked_alchemy_choice_updates_both_steps_and_materials(self):
-        self.check('''skills[1].rank=130; ns.Refresh(); ns.SetTarget(165); ns.Render()
-            assert(ns.SetChoice('alchemy','oil-mana','mana')); ns.Render()
+        self.check('''skills[1].rank=250; ns.Refresh(); ns.SetTarget(300); ns.Render()
+            assert(ns.SetChoice('alchemy','finish','mana')); ns.Render()
             assert(#ns.plan.steps==2)
-            for _,s in ipairs(ns.plan.steps) do assert(s.recipes[1].name=='Lesser Mana Potion') end
+            assert(ns.plan.steps[1].recipes[1].name=='Elixir of Greater Intellect')
+            assert(ns.plan.steps[2].recipes[1].name=='Superior Mana Potion')
             local mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
-            assert(mats.Mageroyal==42 and mats.Stranglekelp==42 and mats['Empty Vial']==42)
-            assert(mats['Firefin Snapper']==nil and mats.Kingsblood==nil)
-            assert(ns.choiceDelta:find('Reduces 40 Firefin Snapper'))
-            ns.db=nil; ns.LoadSettings(); assert(ns.ActiveChoices('alchemy')['oil-mana']=='mana')
-            assert(ns.SetChoice('alchemy','oil-mana','default')); ns.Render()
-            assert(ns.plan.steps[1].recipes[1].name=='Fire Oil')''')
+            assert(mats.Blindweed==131 and mats.Sungrass==110 and mats['Crystal Vial']==76)
+            assert(mats['Stonescale Eel']==nil and mats['Leaded Vial']==nil)
+            assert(ns.choiceDelta:find('Reduces 47 Stonescale Eel'))
+            ns.db=nil; ns.LoadSettings(); assert(ns.ActiveChoices('alchemy')['finish']=='mana')
+            assert(ns.SetChoice('alchemy','finish','default')); ns.Render()
+            assert(ns.plan.steps[1].recipes[1].name=='Stonescale Oil')''')
 
     def test_alternate_dropdown_comparison_and_no_target(self):
-        self.check('''ns.Command('show'); skills[1].rank=130; ns.Refresh()
+        self.check('''ns.Command('show'); skills[1].rank=250; ns.Refresh()
             assert(ns.optionButton:IsShown() and ns.plan==nil)
             ns.optionButton:GetScript('OnClick')(); assert(ns.alternateMenu:IsShown())
             local alternate=ns.alternateMenu.buttons[2]
             alternate:GetScript('OnClick')(alternate)
             assert(not ns.alternateMenu:IsShown() and ns.plan==nil)
-            assert(ns.recipeText:GetText()=='Lesser Mana Potion')
+            assert(ns.recipeText:GetText()=='Elixir of Greater Intellect')
             assert(not ns.exportButton.enabled)
-            ns.SetTarget(165); ns.Render(); ns.compareButton:GetScript('OnClick')()
-            assert(ns.compareText:IsShown() and ns.compareText:GetText():find('Firefin Snapper'))
-            assert(ns.ActiveChoices('alchemy')['oil-mana']=='mana')
+            ns.SetTarget(300); ns.Render(); ns.compareButton:GetScript('OnClick')()
+            assert(ns.compareText:IsShown() and ns.compareText:GetText():find('Stonescale Eel'))
+            assert(ns.ActiveChoices('alchemy')['finish']=='mana')
             ns.compareButton:GetScript('OnClick')(); assert(not ns.compareText:IsShown())''')
 
     def test_enchanting_consistent_paths_and_minimum_estimate(self):
         self.check('''skills={{skillID=333,name='Enchanting',rank=20,maxRank=150}}; ns.Refresh()
             ns.SetTarget(150); ns.Render()
             local defaults=ns.GetGuideSteps('enchanting')
-            assert(defaults[4].recipes[1].name=='Enchant Bracer - Minor Stamina')
+            assert(defaults[4].recipes[1].name=='Enchant Chest - Inferior Stamina')
             assert(ns.SetChoice('enchanting','early-path','essence')); ns.Render()
             assert(ns.plan.steps[1].recipes[1].name=='Enchant Bracer - Minor Deflect')
             assert(ns.plan.steps[#ns.plan.steps].recipes[1].name=='Enchant 2H Weapon - Lesser Intellect')
@@ -446,21 +447,21 @@ class AddonTests(unittest.TestCase):
                 if o.faction=='Horde' then assert(not ns.SetChoice('cooking',g.id,o.id)); found=true end
             end end
             assert(found)
-            ns.db.choices.invalid={bad='bad'}; ns.db.choices.alchemy={['oil-mana']='mana',bad='bad'}
+            ns.db.choices.invalid={bad='bad'}; ns.db.choices.alchemy={['finish']='mana',bad='bad'}
             ns.db.exports={alchemy={['bad']='bad',[2447]=-1,[3371]=42}}
             ns.db=nil; ns.LoadSettings()
             assert(ns.db.choices.invalid==nil and ns.db.choices.alchemy.bad==nil)
-            assert(ns.db.choices.alchemy['oil-mana']=='mana' and ns.db.exports.alchemy[3371]==42)
+            assert(ns.db.choices.alchemy['finish']=='mana' and ns.db.exports.alchemy[3371]==42)
             assert(ns.db.exports.alchemy[2447]==nil)''')
 
     def test_comparisons_and_choices_do_not_write_farming_goals(self):
-        self.check('''skills[1].rank=130; ns.Refresh(); ns.SetTarget(165); ns.Render()
+        self.check('''skills[1].rank=250; ns.Refresh(); ns.SetTarget(300); ns.Render()
             ItemFarmingToolDB={items={}}; writes=0
             SlashCmdList.ITEMFARMINGTOOL=function() writes=writes+1 end
             local group=ns.GroupForStep('alchemy',ns.selectedStep)
             local comparison=ns.CompareChoice('alchemy',group,group.options[2])
-            assert(comparison:find('Adds 42 Stranglekelp') and ns.ActiveChoices('alchemy')['oil-mana']==nil)
-            ns.SetChoice('alchemy','oil-mana','mana'); ns.Render()
+            assert(comparison:find('Adds 121 Blindweed') and ns.ActiveChoices('alchemy')['finish']==nil)
+            ns.SetChoice('alchemy','finish','mana'); ns.Render()
             Fire('BAG_UPDATE_DELAYED'); Fire('SKILL_LINES_CHANGED'); Tick()
             assert(writes==0 and next(ns.db.exports)==nil)''')
 
@@ -471,15 +472,15 @@ class AddonTests(unittest.TestCase):
         for name in ['Core.lua','UI.lua']:
             self.lua.execute((folder/name).read_text(encoding='utf-8'),'ItemFarmingTool',ift)
         self.check('''Fire('ADDON_LOADED','ItemFarmingTool'); Fire('PLAYER_LOGIN')
-            skills[1].rank=130; ns.Refresh(); ns.SetTarget(165); ns.Render()
-            assert(ns.Export(ns.plan)); assert(ift.Find(6359).goal==40)
-            ns.SetChoice('alchemy','oil-mana','mana'); ns.Render()
+            skills[1].rank=250; ns.Refresh(); ns.SetTarget(300); ns.Render()
+            assert(ns.Export(ns.plan)); assert(ift.Find(13422).goal==47)
+            ns.SetChoice('alchemy','finish','mana'); ns.Render()
             local review=ns.ExportReview(ns.plan)
-            assert(review:find('Firefin Snapper') and review:find('needs 0'))
-            assert(ift.Find(6359).goal==40)
-            assert(ns.Export(ns.plan)); assert(ns.ExportReview(ns.plan):find('Firefin Snapper'))
-            ift.RemoveItem(6359); assert(not ns.ExportReview(ns.plan):find('Firefin Snapper'))
-            assert(ift.Find(3820).goal==42)''')
+            assert(review:find('Stonescale Eel') and review:find('needs 0'))
+            assert(ift.Find(13422).goal==47)
+            assert(ns.Export(ns.plan)); assert(ns.ExportReview(ns.plan):find('Stonescale Eel'))
+            ift.RemoveItem(13422); assert(not ns.ExportReview(ns.plan):find('Stonescale Eel'))
+            assert(ift.Find(8838).goal==110)''')
 
     def test_all_alternate_paths_have_valid_coverage_items_and_icons(self):
         self.check('''for slug,groups in pairs(ns.Alternates) do
@@ -528,7 +529,7 @@ class AddonTests(unittest.TestCase):
             owned={[4236]=11,[4235]=11,[4234]=68,[2321]=2}
             ns.Refresh(); ns.SetTarget(195); ns.Render()
             local mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
-            assert(mats['Heavy Hide']==10 and mats.Salt==30 and mats['Heavy Leather']==332)
+            assert(mats['Heavy Hide']==10 and mats.Salt==30 and mats['Heavy Leather']==312)
             local cured=ns.plan.prepared[1]
             assert(cured.name=='Cured Heavy Hide' and cured.used==11 and cured.missing==10)
             assert(ns.preparedText:IsShown() and ns.preparedText:GetText():find('use 11 from bags'))
@@ -567,8 +568,8 @@ class AddonTests(unittest.TestCase):
             mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
             assert(mats['Linen Cloth']==nil)''')
 
-    def test_november15_source_routes_and_oil_yield(self):
-        self.check('''assert(ns.SourceDate=='2026-11-15')
+    def test_current_source_routes_and_oil_yield(self):
+        self.check('''assert(ns.SourceDate=='2026-11-17')
             skills={{skillID=171,name='Alchemy',rank=250,maxRank=300}}; ns.Refresh()
             ns.SetTarget(300); ns.Render()
             assert(ns.plan.steps[1].recipes[1].name=='Stonescale Oil')
@@ -600,13 +601,62 @@ class AddonTests(unittest.TestCase):
 
     def test_source_refresh_retires_only_removed_saved_choices(self):
         self.check('''ns.db.choices={leatherworking={['heavy-hides']='leather'},
-                blacksmithing={imperial='ebon'},alchemy={['oil-mana']='mana'}}
-            ns.db.sourceDate='2026-11-12'; ns.db.targets.alchemy=165
+                blacksmithing={imperial='ebon'},alchemy={['finish']='mana'}}
+            ns.db.sourceDate='2026-11-12'; ns.db.targets.alchemy=300
             ns.db.exports.alchemy={[3371]=42}; ns.db=nil; ns.LoadSettings()
             assert(ns.db.choices.leatherworking['heavy-hides']==nil)
             assert(ns.db.choices.blacksmithing.imperial==nil)
-            assert(ns.db.choices.alchemy['oil-mana']=='mana')
-            assert(ns.db.targets.alchemy==165 and ns.db.exports.alchemy[3371]==42)
+            assert(ns.db.choices.alchemy['finish']=='mana')
+            assert(ns.db.targets.alchemy==300 and ns.db.exports.alchemy[3371]==42)
             assert(ns.db.sourceDate==ns.SourceDate and ns.status:find('Retired'))''')
+
+    def test_november17_enchanting_wand_and_dust_routes(self):
+        self.check('''skills={{skillID=333,name='Enchanting',rank=70,maxRank=150}}; ns.Refresh()
+            ns.SetTarget(100); ns.Render()
+            assert(ns.plan.steps[1].to==85 and ns.plan.steps[1].recipes[1].crafts==23)
+            assert(ns.plan.steps[2].from==85 and ns.plan.steps[2].recipes[1].crafts==15)
+            assert(ns.plan.materials[1].name=='Strange Dust' and ns.plan.materials[1].quantity==53)
+            skills[1].rank=110; ns.Refresh(); ns.SetTarget(150); ns.Render()
+            ns.SetChoice('enchanting','early-path','essence'); ns.Render()
+            assert(ns.plan.steps[1].recipes[1].name=='Greater Magic Wand')
+            assert(ns.plan.steps[1].to==125 and ns.plan.steps[1].recipes[1].crafts==23)
+            assert(ns.plan.steps[2].recipes[1].crafts==37)
+            local mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
+            assert(mats['Simple Wood']==23 and mats['Lesser Magic Essence']==194)
+            ns.SetChoice('enchanting','early-path','essence-trainer'); ns.Render()
+            assert(ns.plan.steps[2].recipes[1].name=='Enchant Boots - Minor Stamina')
+            assert(ns.plan.steps[2].recipes[1].crafts==25)''')
+
+    def test_linked_spurs_and_conflicting_alternates_are_exclusive(self):
+        self.check('''skills={{skillID=164,name='Blacksmithing',rank=215,maxRank=300}}; level=60; ns.Refresh()
+            ns.SetTarget(270); ns.Render(); assert(ns.SetChoice('blacksmithing','spurs','spurs')); ns.Render()
+            assert(ns.plan.steps[3].from==230 and ns.plan.steps[3].to==245)
+            assert(ns.plan.steps[3].recipes[1].crafts==33)
+            assert(ns.GroupForStep('blacksmithing',ns.plan.steps[3]).id=='spurs')
+            local before=ns.ActiveChoices('blacksmithing').spurs
+            local group,option=ns.FindChoice('blacksmithing','imperial','rapier')
+            assert(ns.CompareChoice('blacksmithing',group,option))
+            assert(ns.ActiveChoices('blacksmithing').spurs==before)
+            assert(ns.SetChoice('blacksmithing','imperial','rapier')); ns.Render()
+            assert(ns.ActiveChoices('blacksmithing').spurs==nil)
+            local expected=215
+            for _,s in ipairs(ns.plan.steps) do assert(s.from==expected); expected=s.to end
+            assert(expected==270)
+            assert(ns.SetChoice('blacksmithing','spurs','spurs'))
+            assert(ns.ActiveChoices('blacksmithing').imperial==nil)
+            assert(not ns.SetChoice('blacksmithing','spurs-late','spurs'))
+            local selected=ns.NormalizeChoices('blacksmithing',{spurs='spurs',imperial='rapier'})
+            assert(selected.spurs=='spurs' and selected.imperial==nil)''')
+
+    def test_lockpicking_source_gap_and_retired_alchemy_path(self):
+        self.check('''skills={{skillID=633,name='Lockpicking',rank=270,maxRank=300}}; level=60; ns.Refresh()
+            ns.SetTarget(300); ns.Render()
+            assert(ns.Guides.lockpicking.cap==270 and #ns.plan.steps==0)
+            assert(ns.warningText:GetText():find('270'))
+            assert(not ns.FindChoice('alchemy','oil-mana','mana'))
+            ns.db.choices.alchemy={['oil-mana']='mana',finish='mana'}
+            ns.db.sourceDate='2026-11-15'; ns.db=nil; ns.LoadSettings()
+            assert(ns.db.choices.alchemy['oil-mana']==nil and ns.db.choices.alchemy.finish=='mana')
+            assert(ns.status:find('Retired'))''')
 
 if __name__=='__main__': unittest.main(verbosity=2)
