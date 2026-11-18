@@ -19,12 +19,12 @@ ns.Professions = {
 }
 ns.TrainerHints = {
     alchemy="Expert: Ainethil, Darnassus (Alliance) / Doctor Herbert Halsey, Undercity (Horde). Artisan: Kylanna Windwhisper, Feralas / Rogvar, Stonard.",
-    blacksmithing="Expert: Bengus Deepforge, Ironforge / Saru Steelfury, Orgrimmar. Artisan: Brikk Keencraft, Booty Bay. Imperial Plate recipes: Derotain Mudsipper, Tanaris; level 50. Their lowered quest skill requirements remain unverified.",
+    blacksmithing="Expert: Bengus Deepforge, Ironforge / Saru Steelfury, Orgrimmar. Artisan: Brikk Keencraft, Booty Bay. Imperial Plate recipes: Derotain Mudsipper, Tanaris; level 50. Complete A Blue Light Bargain first to unlock the recipe quests.",
     enchanting="Expert: Kitta Firewind, Tower of Azora / Hgarth, Sun Rock Retreat. Artisan: Annora, Uldaman.",
     engineering="Expert: Springspindle Fizzlegear, Ironforge / Roxxik, Orgrimmar. At skill 200, visit Buzzek Bracketswing in Gadgetzan for Artisan recipes (level 35). Keep a Blacksmith Hammer.",
     leatherworking="Expert: Telonis, Darnassus / Una, Thunder Bluff. At skill 205, Nightscape Pants require an Artisan trainer: Drakk Stonehand, Aerie Peak / Hahrana Ironhide, Camp Mojache (level 35).",
     tailoring="Expert: Georgio Bolero, Stormwind / Josef Gregorian, Undercity. Artisan recipes start at 200: Timothy Worthington, Theramore / Daryl Stack, Tarren Mill. Runecloth Cuffs pattern: Pexmit, Mount Hyjal. Past 280, check rare pattern availability before buying materials.",
-    ["first-aid"]="Expert book: Deneb Walker, Arathi Highlands / Balai Lok'Wein, Dustwallow Marsh. Buy the Heavy Silk and Mageweave manuals too. Artisan requires Triage (skill 225, level 35). Major Healing Potion manual: Pexmit, Mount Hyjal, or A Rest Without Pain in Elderwild, Mount Hyjal.",
+    ["first-aid"]="Expert book: Deneb Walker, Arathi Highlands / Balai Lok'Wein, Dustwallow Marsh. Buy Heavy Silk and Mageweave manuals too. Triage needs skill 225 and level 35 despite the quest's level 45 label: Doctor Gustaf VanHowzen, Theramore / Doctor Gregory Victor, Hammerfall. Major Healing Potion manual: Pexmit (8 gold), or the Horde quest A Rest Without Pain after Herbs for the Bruised and Weary.",
     cooking="Expert Cookbook: Shandrina, Ashenvale / Wulan, Desolace. Artisan: Dirge Quikcleave's Clamlette Surprise, Gadgetzan (skill 225, level 35). Buy fish recipes from vendors; cook beside a fire.",
     mining="Junior starting-area trainers stop at 75; visit the full trainer or a capital for Journeyman. Optional Alliance bonus: Twilight Mine Light (+4 Mining), reward from A Miner Problem in Riverglades.",
     herbalism="Junior starting-area trainers stop at 75. Dwarves and gnomes can visit Reyna Stonebranch in Ironforge after the junior trainer.",
@@ -73,10 +73,9 @@ route("fishing", {
 route("lockpicking", {
     {1,100,"Practice on quickly respawning boxes.","Practice Lockboxes, north of Lake Everstill in Redridge", "Buccaneer's Strongboxes inside the ship near Ratchet"},
     {100,150,"Open Waterlogged Footlockers.","Zoram Strand, Ashenvale", "Zoram Strand, Ashenvale"},
-    {150,200,"Open upstairs footlockers at 150; downstairs ones need 175.","Angor Fortress, Badlands", "Angor Fortress, Badlands"},
-    {200,250,"Open lower-area footlockers until 225, then the upper area. Pickpocket for junkboxes.","The Slag Pit, Searing Gorge", "The Slag Pit, Searing Gorge"},
-    {250,270,"Pick BRD doors and the Shadowforge Lock. Source reports slow skill-ups to about 270 even after locks turn grey at 265; this behavior is unverified. Dungeon entry limits apply. No verified 270-300 route is available from this source."},
-},270)
+    {150,225,"Open upstairs footlockers at 150, then downstairs ones at 175. Source reports the downstairs locks give reliable points until 215 and can be used to 225.","Angor Fortress, Badlands", "Angor Fortress, Badlands"},
+    {225,300,"Open Dented Footlockers in the Slag Pit. Lower locks need 200; upper locks need 225. Stay with the upper locks after lower ones stop giving points. Source reports upper locks remain yellow to 290, then green through 300. Mob junkboxes are too low for useful skill-ups.","The Slag Pit, Searing Gorge", "The Slag Pit, Searing Gorge"},
+})
 
 -- Rank thresholds are not necessarily route boundaries.
 function ns.RankRequirements(slug)

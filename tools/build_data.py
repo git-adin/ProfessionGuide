@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 ROOT = Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--cache-dir',type=Path,default=ROOT/'tools/.source-cache')
-parser.add_argument('--source-date',default='2026-11-17')
+parser.add_argument('--source-date',default='2026-11-18')
 args=parser.parse_args()
 SLUGS = ['alchemy','blacksmithing','enchanting','engineering','leatherworking','tailoring','first-aid','cooking']
 items, spells, recipe_icons = {}, {}, {}
@@ -156,7 +156,7 @@ reviewed_notes={
     ('tailoring',240):'Runecloth Gloves pattern: Qia, Winterspring.',
     ('tailoring',250):'Runecloth Cuffs pattern: Pexmit, Mount Hyjal (bind on pickup). Optional Horde quest source: Threading a Solution from Kal\'tinzan, Elderwild, Mount Hyjal; level 54 and 6 Bolt of Runecloth. Quest skill requirement is unverified.',
     ('tailoring',280):'Requires the world-drop Runecloth Shoulders pattern. Check availability before buying. Wizardweave Turban is an alternate; Loom recipes require another tailor\'s Loom and Cenarion Circle reputation (see source).',
-    ('first-aid',275):'Major Healing Potion manual: Pexmit, Mount Hyjal, or A Rest Without Pain in Elderwild, Mount Hyjal.',
+    ('first-aid',275):'Major Healing Potion manual: Pexmit in Mount Hyjal for 8 gold, or check the Auction House. Horde quest: A Rest Without Pain from Ortak Lomgok in Elderwild; first complete Herbs for the Bruised and Weary.',
 }
 for slug,guide in guides.items():
     for step in guide['steps']:

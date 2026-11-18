@@ -1,4 +1,4 @@
-"""Reviewed branch definitions for the 2026-11-17 source snapshot.
+"""Reviewed branch definitions for the 2026-11-18 source snapshot.
 
 Only recipe facts are retained. Notes are original summaries. A minimum-count
 branch is explicitly flagged when the source gives ingredients but no estimate.
@@ -48,7 +48,7 @@ def build(guides, soups, recipe, items):
         o('thorium','Thorium Bracers, then Imperial Plate Bracers',[b(240,270,s(240,255,'17x Thorium Bracers - 204 Thorium Bar, 68 Blue Power Crystal'),bracers)],
           'Requires world-drop Thorium Bracers plans. After 255, resumes Imperial Plate Bracers (scaled estimate); that quest still needs level 50.'))
     groups['blacksmithing'][-1]['options'][0].update(level=50,
-        note='Imperial Plate recipe quests: Derotain Mudsipper, Tanaris. The lowered quest skill gates are unverified.')
+        note='Imperial Plate recipe quests: Derotain Mudsipper, Tanaris. Complete A Blue Light Bargain first; level 50 required.')
     groups['blacksmithing'][-1]['conflicts']=['spurs']
     # Use the site's active dust tab as a consistent default, including 20-70.
     dust=[]; essence=[]
@@ -90,6 +90,11 @@ def build(guides, soups, recipe, items):
     add('engineering','scope','Scope or powder',[[125,135]],'Standard Scope',
         o('powder','Heavy Blasting Powder',[b(125,135,s(125,135,'10x Heavy Blasting Powder - 10 Heavy Stone',True))],
           'Minimum craft count only: source gives no estimate for this alternate. Save the powder for later steps.'))
+    add('leatherworking','light-hides','Early hide or leather path',[[30,55]],'Cured Light Hide',
+        o('kits','Armor Kits, then Embossed Leather Gloves',[b(30,55,
+            s(30,45,'24x Light Armor Kit - 24 Light Leather'),
+            s(45,55,'10x Embossed Leather Gloves - 30 Light Leather, 20 Coarse Thread'))],
+          'Useful while gathering your own leather. You still need 24 Cured Light Hides for the pants at 100; missing hides are included in later material totals.'))
     add('leatherworking','shoes','Gauntlets or shoes',[[235,265]],'Wicked Leather Gauntlets',
         o('shoes','Blue Suede Shoes',[b(235,265,s(235,265,'36x Blue Suede Shoes - 288 Rugged Leather, 36 Blue Dye, 36 Rune Thread'))],
           'Requires the Blue Suede Shoes pattern. Source compares vendor resale value; no live auction price is assumed.'))
@@ -101,7 +106,7 @@ def build(guides, soups, recipe, items):
         o('hat','Headbands to 280, then Blue Suede Hat',[b(265,300,
             s(265,280,'23x Runic Leather Headband - 322 Rugged Leather, 230 Runecloth, 23 Rune Thread'),
             s(280,300,'20x Blue Suede Hat - 320 Rugged Leather, 80 Blue Dye, 20 Rune Thread'))],
-          'Requires the hat pattern and access to another leatherworker\'s Sewing Machine; your own needs skill 300. Opening headband count is scaled.'))
+          'Requires the hat pattern and a Sewing Machine placed by someone with Leatherworking 300. Buying a machine does not let you place it before 300. Opening headband count is scaled.'))
     add('tailoring','bags','Bags or belts',[[215,225]],'Mageweave Bag',
         o('belts','Runecloth Belt',[b(215,225,s(215,225,'10x Runecloth Belt - 30 Bolt of Runecloth, 10 Rune Thread'))],
           'Requires Artisan Tailoring, even though this step is below 225.',35))
@@ -109,8 +114,13 @@ def build(guides, soups, recipe, items):
         o('turban','Wizardweave Turban',[b(280,300,s(280,300,'58x Wizardweave Turban - 348 Bolt of Runecloth, 232 Dream Dust, 58 Star Ruby'))],
           'Requires a rare pattern; check availability before buying materials. Both 280-300 options depend on world-drop patterns.'))
     add('first-aid','starter','Bandages or potions',[[1,75]],'Linen bandages',
-        o('potions','Minor Healing Potion',[b(1,75,s(1,75,'81x Minor Healing Potion - 81 Peacebloom, 81 Mild Spices, 81 Empty Vial'))],
+        o('potions','Minor Healing Potion',[b(1,75,s(1,75,'86x Minor Healing Potion - 86 Peacebloom, 86 Mild Spices, 86 Empty Vial'))],
           'Mild Spices: Cooking supply vendors. Empty Vial: Alchemy supply vendors.'))
+    add('first-aid','journeyman','Bandages or poultice/potion path',[[90,150]],'Wool bandages',
+        o('potions','Simple Poultice, then Healing Potion',[b(90,150,
+            s(90,125,'54x Simple Poultice - 54 Spider Ichor, 54 Mild Spices, 54 Bottle of Dalaran Noir'),
+            s(125,150,'31x Healing Potion - 31 Bruiseweed, 31 Hot Spices, 31 Leaded Vial'))],
+          'Linked 90-150 path. Buy spices from Cooking suppliers, vials from Alchemy suppliers and Bottle of Dalaran Noir from barkeeps; use capital-city vendors for Hot Spices and Leaded Vials.'))
 
     # Cooking offers several complete recipe rows at each skill band.
     lo,hi=1,50

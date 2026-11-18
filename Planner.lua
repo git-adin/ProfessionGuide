@@ -79,7 +79,7 @@ function ns.Plan(slug, player, target, choices)
         plan.warnings[#plan.warnings+1]="Artisan Cooking quest supplies are included."
     end
     if slug=="blacksmithing" and imperialUsed then
-        plan.warnings[#plan.warnings+1]="Imperial Plate: level 50 required; quest skill gates are unverified. Recipe quest bars are included unless the recipe is detected as known."
+        plan.warnings[#plan.warnings+1]="Imperial Plate: level 50 required. Complete A Blue Light Bargain to unlock Derotain Mudsipper's recipe quests. Recipe quest bars are included unless the recipe is detected as known."
     end
     if ((slug=="engineering" and target>200) or (slug=="leatherworking" and target>205)) and player.level<35 then
         plan.warnings[#plan.warnings+1]="This route uses Artisan recipes before 225: character level 35 is required."

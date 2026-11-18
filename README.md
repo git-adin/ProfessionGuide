@@ -1,4 +1,4 @@
-# ProfessionGuide 0.4.1
+# ProfessionGuide 0.4.2
 
 An independent WoW Forever addon (Interface 16001) with character-aware profession
 routes and optional, explicit exports to ItemFarmingTool. No addon dependency,
@@ -54,7 +54,7 @@ generic logo for legacy recipe spell IDs.
 
 ## Recipe alternatives
 
-The November 17 refresh includes **37 alternates in 23 choice groups** across the crafting
+The November 18 refresh includes **39 alternates in 25 choice groups** across the crafting
 professions, Cooking and First Aid. The selector appears only for affected steps.
 Use **Compare alternatives** to expand each option's recipe source, requirements
 and ingredient changes for your full target. Counts do not compare auction prices.
@@ -82,21 +82,23 @@ ItemFarmingTool automatically.
 ## Estimates and limitations
 
 The bundled factual route snapshot comes from [WoW-Professions.com's Forever
-guides](https://www.wow-professions.com/forever), refreshed November 17, 2026.
+guides](https://www.wow-professions.com/forever), refreshed November 18, 2026.
 Instructions are condensed and rewritten; this is not the full website, its maps,
 or every informal recipe suggestion. See [SOURCES.md](SOURCES.md).
 
 - **Tailoring now reaches 300**, but after 280 it requires a rare/world-drop
   pattern. Read the availability warnings before purchasing materials. All default
   crafting routes now reach 300. [Source review details](SOURCE_UPDATE_AUDIT.md).
-- **Lockpicking source coverage stops at 270.** The source reports BRD locks stop
-  skilling around that point and has no verified 270-300 route. Targets above 270
-  show an explicit coverage warning.
-- Several source routes at higher skill are provisional. In particular,
-  Blacksmithing's Imperial Plate quest skill gates are unverified in the source;
-  that route requires character level 50. Check availability before purchasing.
+- **Lockpicking now reaches 300** through the upper Slag Pit footlockers after
+  Angor Fortress at 150-225. The source bases this update on reader reports; the
+  addon no longer uses BRD or the previous 270 coverage cap.
+- Some high-level requirements remain provisional. Imperial Plate requires
+  character level 50 and the prerequisite **A Blue Light Bargain** before the
+  recipe quests. Check recipe and pattern availability before purchasing.
 - Each band uses the source's estimated craft count. Partial bands scale that
   count and round up whole crafts. Yellow/green recipes can require more or less.
+  The source now offers ranges for some full shopping lists; this addon uses the
+  listed per-step craft estimates and does not promise a particular probability.
   These are shopping estimates, not a skill-up probability simulation or live
   auction-house cost comparison.
 - Keep intermediate crafts. The planner nets their output against later

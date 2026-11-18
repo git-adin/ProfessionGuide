@@ -1,4 +1,26 @@
-# Upstream guide review — November 17, 2026
+# Upstream guide review — November 18, 2026
+
+Fetched all 13 supported guides and compared them with November 17. Eight pages
+changed; Cooking, Mining, Herbalism, Skinning and Fishing were unchanged.
+
+| Guide | Changes applied in 0.4.2 |
+| --- | --- |
+| Alchemy | Minor Fortitude 65-90 now estimates 28 crafts, 56 Earthroot, 28 Peacebloom and 28 Empty Vials. |
+| Blacksmithing | Added A Blue Light Bargain as the prerequisite for Imperial Plate recipe quests. Removed the superseded speculation about quest skill gates. Existing recipe quest bar totals already match the source's 140-bar total for all four patterns. |
+| Enchanting | Removed a commentary sentence upstream; no recipe quantities or ranges changed. |
+| Engineering | Early route now makes 66 powder, 33 bolts and 33 bombs. Their intermediate output is netted together. Dense Blasting Powder 250-260 now estimates 44 crafts and 88 Dense Stone. |
+| Leatherworking | Replaced Barbaric Harness 185-195 and the old headband band with 22 Nightscape Headbands at 185-205. Added the optional 30-55 kits/gloves path, retaining the later requirement for 24 cured light hides. Clarified that someone with skill 300 must place the Sewing Machine, even if the player buys it. |
+| Tailoring | Full shopping-list ranges and explanatory text changed, but per-step recipe counts are unchanged. The planner continues using per-step estimates; it does not claim the source's whole-list confidence levels for partial plans. |
+| First Aid | Updated potion/bandage quantities; added Wool Bandage 80-90 and a linked 90-150 Simple Poultice/Healing Potion alternate. Added Triage's actual level-35 requirement despite its level-45 label. Major Healing Potion manual costs 8 gold at Pexmit; its Horde quest requires Herbs for the Bruised and Weary first. |
+| Lockpicking | Restored full coverage through the source's new reader-reported route: Angor Fortress 150-225, upper Slag Pit footlockers 225-300. Removed the previous source gap at 270 and all BRD guidance. |
+
+All changes retain explicit export behavior and prepared-supply accounting. The
+source's confidence ranges are not copied as guarantees for scaled route plans.
+Unchanged guides were checked, not regenerated from assumed changes. Gameplay
+validation remains necessary; source parity is not independent verification of
+reader reports or skill-up probabilities.
+
+## Previous review — November 17, 2026
 
 Fetched all 13 supported guides again and compared them with the November 15
 baseline. All pages changed, but several changes were only the new completion /

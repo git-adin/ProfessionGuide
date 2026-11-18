@@ -395,7 +395,7 @@ function ns.Render(resetInput)
             notes[#notes+1]="\nSource: WoW-Professions.com ("..ns.SourceDate..")\n"..ns.Guides[slug].source
             notes[#notes+1]="\nRecipe option selects a default or alternate path. Linked steps change together. Compare alternatives shows material changes for the full target. Choices save per character and profession. No farming goals change until you export."
             notes[#notes+1]="\nSome high-level routes still have unverified requirements. Tailoring reaches 300 but needs rare patterns after 280. Some alternates have minimum counts only. No live auction prices or automatic crafting."
-            if slug=="lockpicking" then notes[#notes+1]="\nLockpicking skill cap: five times your character level, up to 300. Current source route coverage ends at 270; the author has no verified 270-300 route. BRD locks are not presented as a route to 300." end
+            if slug=="lockpicking" then notes[#notes+1]="\nLockpicking skill cap: five times your character level, up to 300. The source now recommends Angor Fortress through 225, then upper Slag Pit footlockers through 300, based on reader reports. BRD is not used for the last points." end
         else
             notes={GOLD.."No profession detected|r","","Learn a profession, then click Refresh. Expand collapsed categories in the Skills panel if a profession is missing."}
         end
