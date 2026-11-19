@@ -10,6 +10,9 @@ FILES=['Data.lua','Routes.lua','Character.lua','Icons.lua','Choices.lua','Planne
 
 class AddonTests(unittest.TestCase):
     def setUp(self):
+        self.start_session()
+
+    def start_session(self, farming_tool=None):
         self.lua=LuaRuntime(unpack_returned_tuples=True)
         self.lua.execute((ROOT/'tests/wow_mock.lua').read_text())
         self.lua.execute(r'''
@@ -32,11 +35,42 @@ class AddonTests(unittest.TestCase):
             function mt:SetEnabled(value) self.enabled=value end
             UISpecialFrames={}
         ''')
+        if farming_tool is not None:
+            ift = self.lua.table()
+            self.lua.globals().ift = ift
+            for name in ['Core.lua', 'UI.lua']:
+                self.lua.execute((farming_tool / name).read_text(encoding='utf-8'), 'ItemFarmingTool', ift)
+            self.check("assert(ItemFarmingToolAPI==nil); Fire('ADDON_LOADED','ItemFarmingTool'); assert(ItemFarmingToolAPI)")
         ns=self.lua.table(); self.lua.globals().ns=ns
         for name in FILES: self.lua.execute((ROOT/name).read_text(encoding='utf-8'),'ProfessionGuide',ns)
         self.check("Fire('ADDON_LOADED','ProfessionGuide'); Fire('PLAYER_LOGIN')")
 
     def check(self,code): self.lua.execute(code)
+
+    def start_paired_session(self):
+        folder = ROOT.parent / 'ItemFarmingTool/ItemFarmingTool'
+        if not folder.exists():
+            self.skipTest('Optional sibling ItemFarmingTool source unavailable')
+        self.start_session(farming_tool=folder)
+
+    def install_farming_tool_spy(self):
+        self.check('''batches={}; goals={}
+            ItemFarmingToolAPI={
+                GetTrackedGoals=function()
+                    local snapshot={}
+                    for id,quantity in pairs(goals) do snapshot[id]=quantity end
+                    return snapshot
+                end,
+                ApplyMinimumGoals=function(materials,showTracker)
+                    batches[#batches+1]={materials=materials,showTracker=showTracker}
+                    if rejectBatch then return false,rejectBatch end
+                    for _,material in ipairs(materials) do
+                        goals[material.id]=math.max(goals[material.id] or 0,material.quantity)
+                    end
+                    return true
+                end,
+            }
+        ''')
 
     def test_no_target_no_plan_or_export(self):
         self.check('''assert(ns.plan==nil and next(ns.db.targets)==nil)
@@ -52,34 +86,45 @@ class AddonTests(unittest.TestCase):
             for _,m in ipairs(p.materials) do assert(m.quantity==4) end''')
 
     def test_skill_changes_never_export(self):
-        self.check('''writes=0; ItemFarmingToolDB={items={}}
-            SlashCmdList.ITEMFARMINGTOOL=function() writes=writes+1 end
-            ns.SetTarget(55); ns.Render(); assert(writes==0)
+        self.install_farming_tool_spy()
+        self.check('''ns.SetTarget(55); ns.Render(); assert(#batches==0)
             skills[1].rank=20; Fire('SKILL_LINES_CHANGED'); Tick()
-            assert(ns.plan.rank==20 and writes==0)
-            Fire('PLAYER_LEVEL_UP'); Tick(); assert(writes==0)''')
+            assert(ns.plan.rank==20 and #batches==0)
+            Fire('PLAYER_LEVEL_UP'); Tick(); assert(#batches==0)''')
 
     def test_opt_in_export_preserves_and_is_repeatable(self):
-        self.check('''ItemFarmingToolDB={items={{id=765,goal=999},{id=123,goal=7}}}; calls={}
-            SlashCmdList.ITEMFARMINGTOOL=function(text)
-                calls[#calls+1]=text
-                local id,q=text:match('add (%d+) (%d+)')
-                if id then table.insert(ItemFarmingToolDB.items,{id=tonumber(id),goal=tonumber(q)}) end
-            end
-            ns.SetTarget(10); ns.Render(); assert(#calls==0)
-            assert(ns.Export(ns.plan)); assert(#calls==2)
-            assert(ItemFarmingToolDB.items[1].goal==999 and ItemFarmingToolDB.items[2].goal==7)
-            assert(ns.Export(ns.plan)); assert(#calls==3) -- show only, no duplicate writes
+        self.install_farming_tool_spy()
+        self.check('''goals={[2447]=999,[123]=7}
+            ns.SetTarget(10); ns.Render(); assert(#batches==0 and ns.exportButton.enabled)
+            ns.exportButton:GetScript('OnClick')(); assert(#batches==1)
+            assert(batches[1].showTracker and #batches[1].materials==#ns.plan.materials)
+            assert(goals[2447]==999 and goals[123]==7 and goals[3371]==9)
+            assert(ns.Export(ns.plan)); assert(#batches==2 and goals[3371]==9)
         ''')
 
-    def test_export_capacity_preflight(self):
-        self.check('''ItemFarmingToolDB={items={}}; writes=0
-            for i=1,100 do table.insert(ItemFarmingToolDB.items,{id=i,goal=1}) end
-            SlashCmdList.ITEMFARMINGTOOL=function() writes=writes+1 end
-            ns.SetTarget(10); ns.Render(); assert(not ns.Export(ns.plan)); assert(writes==0)''')
+    def test_provider_failure_preserves_export_history(self):
+        self.install_farming_tool_spy()
+        self.check('''ns.db.exports.alchemy={[765]=99}
+            rejectBatch='Provider capacity reached'
+            ns.SetTarget(10); ns.Render()
+            ns.exportButton:GetScript('OnClick')()
+            assert(#batches==1 and next(goals)==nil)
+            assert(ns.db.exports.alchemy[765]==99 and next(ns.db.exports.alchemy,765)==nil)
+            assert(ns.statusText:GetText()==rejectBatch)''')
 
     def test_no_optional_addon(self):
         self.check("ns.SetTarget(75); ns.Render(); assert(ns.plan); assert(not ns.CanExport()); assert(not ns.Export(ns.plan))")
+
+    def test_older_provider_prompts_update_without_disabling_planning(self):
+        self.check('''C_AddOns={IsAddOnLoaded=function(name) return name=='ItemFarmingTool' end}
+            ItemFarmingToolDB={items={}}
+            SlashCmdList.ITEMFARMINGTOOL=function() error('Player command must not be called') end
+            ns.SetTarget(10); ns.Render()
+            assert(ns.plan and not ns.exportButton.enabled)
+            assert(ns.statusText:GetText():find('Update ItemFarmingTool'))
+            local ok,reason=ns.Export(ns.plan)
+            assert(not ok and reason:find('Update ItemFarmingTool'))
+            assert(#ItemFarmingToolDB.items==0 and next(ns.db.exports)==nil)''')
 
     def test_intermediate_oils_not_double_counted(self):
         self.check('''skills[1].rank=130; ns.Refresh(); local p=ns.Plan('alchemy',ns.player,165)
@@ -184,17 +229,18 @@ class AddonTests(unittest.TestCase):
             assert(ns.db.position==nil and ns.db.selected==nil and ns.db.hidden==true)''')
 
     def test_actual_itemfarmingtool_integration(self):
-        folder=ROOT.parent/'ItemFarmingTool/ItemFarmingTool'
-        if not folder.exists(): self.skipTest('Optional sibling ItemFarmingTool source unavailable')
-        ift=self.lua.table(); self.lua.globals().ift=ift
-        for name in ['Core.lua','UI.lua']:
-            self.lua.execute((folder/name).read_text(encoding='utf-8'),'ItemFarmingTool',ift)
-        self.check('''Fire('ADDON_LOADED','ItemFarmingTool'); Fire('PLAYER_LOGIN')
+        self.start_paired_session()
+        self.check('''SlashCmdList.ITEMFARMINGTOOL=function() error('Player command must not be called') end
             assert(ift.AddItem('2447',100)); assert(ift.AddItem('2589',7))
+            ift.Command('hide')
             ns.SetTarget(10); ns.Render(); assert(ns.Export(ns.plan))
             assert(ift.Find(2447).goal==100 and ift.Find(2589).goal==7)
+            assert(ift.frame:IsShown())
             assert(ift.Find(3371).goal==9); local total=#ift.db.items
-            assert(ns.Export(ns.plan)); assert(#ift.db.items==total)''')
+            assert(ns.Export(ns.plan)); assert(#ift.db.items==total)
+            ns.plan.materials[#ns.plan.materials+1]={quantity=1}
+            assert(not ns.Export(ns.plan))
+            assert(#ift.db.items==total and ift.Find(2447).goal==100)''')
 
     def test_workshop_recipe_selection_keeps_full_route_totals(self):
         self.check('''skills[1].rank=65; ns.Refresh(); ns.SetTarget(120); ns.Render()
@@ -341,14 +387,13 @@ class AddonTests(unittest.TestCase):
 
     def test_minimap_toggle_never_exports_and_init_is_idempotent(self):
         self.create_minimap()
+        self.install_farming_tool_spy()
         self.check('''assert(ns.minimapButton:IsShown() and ns.db.hidden)
-            ItemFarmingToolDB={items={}}; writes=0
-            SlashCmdList.ITEMFARMINGTOOL=function() writes=writes+1 end
             ns.SetTarget(120)
             ns.minimapButton:GetScript('OnClick')(); assert(ns.frame:IsShown())
             ns.minimapButton:GetScript('OnClick')(); assert(not ns.frame:IsShown())
             local count=#frames; ns.InitMinimapButton(); assert(#frames==count)
-            assert(writes==0 and ns.minimapButton:GetScript('OnUpdate')==nil)
+            assert(#batches==0 and ns.minimapButton:GetScript('OnUpdate')==nil)
             ns.minimapButton:GetScript('OnEnter')(ns.minimapButton)
             ns.minimapButton:GetScript('OnLeave')()''')
 
@@ -455,24 +500,18 @@ class AddonTests(unittest.TestCase):
             assert(ns.db.exports.alchemy[2447]==nil)''')
 
     def test_comparisons_and_choices_do_not_write_farming_goals(self):
+        self.install_farming_tool_spy()
         self.check('''skills[1].rank=250; ns.Refresh(); ns.SetTarget(300); ns.Render()
-            ItemFarmingToolDB={items={}}; writes=0
-            SlashCmdList.ITEMFARMINGTOOL=function() writes=writes+1 end
             local group=ns.GroupForStep('alchemy',ns.selectedStep)
             local comparison=ns.CompareChoice('alchemy',group,group.options[2])
             assert(comparison:find('Adds 121 Blindweed') and ns.ActiveChoices('alchemy')['finish']==nil)
             ns.SetChoice('alchemy','finish','mana'); ns.Render()
             Fire('BAG_UPDATE_DELAYED'); Fire('SKILL_LINES_CHANGED'); Tick()
-            assert(writes==0 and next(ns.db.exports)==nil)''')
+            assert(#batches==0 and next(ns.db.exports)==nil)''')
 
     def test_previous_export_review_survives_reexport(self):
-        folder=ROOT.parent/'ItemFarmingTool/ItemFarmingTool'
-        if not folder.exists(): self.skipTest('Optional sibling ItemFarmingTool source unavailable')
-        ift=self.lua.table(); self.lua.globals().ift=ift
-        for name in ['Core.lua','UI.lua']:
-            self.lua.execute((folder/name).read_text(encoding='utf-8'),'ItemFarmingTool',ift)
-        self.check('''Fire('ADDON_LOADED','ItemFarmingTool'); Fire('PLAYER_LOGIN')
-            skills[1].rank=250; ns.Refresh(); ns.SetTarget(300); ns.Render()
+        self.start_paired_session()
+        self.check('''skills[1].rank=250; ns.Refresh(); ns.SetTarget(300); ns.Render()
             assert(ns.Export(ns.plan)); assert(ift.Find(13422).goal==47)
             ns.SetChoice('alchemy','finish','mana'); ns.Render()
             local review=ns.ExportReview(ns.plan)

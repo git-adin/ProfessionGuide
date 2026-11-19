@@ -15,6 +15,8 @@ function methods:HookScript(key,callback)
 end
 function methods:GetFrameLevel() return self.frameLevel or 1 end
 function methods:SetFrameLevel(level) self.frameLevel=level end
+function methods:SetToplevel(value) self.topLevel=value end
+function methods:Raise() self.raiseCount=(self.raiseCount or 0)+1 end
 function methods:GetEffectiveScale() return self.scale or 1 end
 function methods:GetCenter() return self.centerX or 0,self.centerY or 0 end
 function methods:SetHighlightTexture(texture) self.highlight=texture end
