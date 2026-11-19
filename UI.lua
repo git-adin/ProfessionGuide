@@ -404,7 +404,8 @@ function ns.Render(resetInput)
     ns.bodyFrame:SetHeight(math.max(480,height))
     if resetInput then ns.scroll:SetVerticalScroll(0); ns.routeScroll:SetVerticalScroll(0) end
     ns.notesButton:SetText(actionIcon("INV_Misc_Book_09",ns.showNotes and "Back to workshop" or "Training & notes"))
-    ns.exportButton:SetEnabled(ns.CanExport() and ns.plan~=nil and #ns.plan.materials>0)
-    ns.statusText:SetText(ns.status or (ns.CanExport() and "ItemFarmingTool connected. Export only when you click; existing higher goals are preserved." or "ItemFarmingTool not loaded. Guide and shopping list remain available."))
+    local canExport, exportStatus = ns.CanExport()
+    ns.exportButton:SetEnabled(canExport and ns.plan~=nil and #ns.plan.materials>0)
+    ns.statusText:SetText(ns.status or (canExport and "ItemFarmingTool connected. Export only when you click. Existing higher goals are preserved." or exportStatus))
     if ns.db.hidden then ns.frame:Hide() else ns.frame:Show() end
 end

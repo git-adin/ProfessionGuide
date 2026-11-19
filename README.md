@@ -1,4 +1,4 @@
-# ProfessionGuide 0.4.2
+# ProfessionGuide 0.4.3
 
 An independent WoW Forever addon (Interface 16001) with character-aware profession
 routes and optional, explicit exports to ItemFarmingTool. No addon dependency,
@@ -6,7 +6,8 @@ network access, library or developer tool is needed in game.
 
 ## Install and use
 
-Extract `dist/ProfessionGuide.zip` into `_forever_/Interface/AddOns/`. The resulting
+[Download ProfessionGuide.zip](https://github.com/git-adin/ProfessionGuide/releases/latest/download/ProfessionGuide.zip)
+and extract it into `_forever_/Interface/AddOns/`. The resulting
 path must be `AddOns/ProfessionGuide/ProfessionGuide.toc`. Enable ProfessionGuide
 and type `/pg` after logging in.
 You can also click the book button beside the minimap to open or close the Workshop.
@@ -88,7 +89,7 @@ or every informal recipe suggestion. See [SOURCES.md](SOURCES.md).
 
 - **Tailoring now reaches 300**, but after 280 it requires a rare/world-drop
   pattern. Read the availability warnings before purchasing materials. All default
-  crafting routes now reach 300. [Source review details](SOURCE_UPDATE_AUDIT.md).
+  crafting routes now reach 300. [Source review details](https://github.com/git-adin/ProfessionGuide/blob/main/SOURCE_UPDATE_AUDIT.md).
 - **Lockpicking now reaches 300** through the upper Slag Pit footlockers after
   Angor Fortress at 150-225. The source bases this update on reader reports; the
   addon no longer uses BRD or the previous 270 coverage cap.
@@ -127,17 +128,17 @@ or every informal recipe suggestion. See [SOURCES.md](SOURCES.md).
 
 ## Optional ItemFarmingTool integration
 
-Tested against the local ItemFarmingTool **0.2.2**. Uses its existing slash-command
-handler, checks its saved goals read-only, and never writes its database directly.
-`OptionalDeps` only establishes load order when installed; it is not required.
+Export requires ItemFarmingTool 0.2.5 or later with `ItemFarmingToolAPI`. If the
+add-on is missing or needs an update, the planner and shopping list still work.
+`OptionalDeps` establishes load order when both add-ons are enabled.
 
 Exports set **minimum total goals**, preserving existing higher quantities and
 unrelated entries. Repeated exports do not add the same quantity again. Existing
 goals are not removed when you change/clear a target or finish a band. Review and
 remove obsolete goals in ItemFarmingTool yourself. Shared items for two profession
 plans use the higher exported goal, **not the sum**; export is one selected route
-at a time. The full batch is checked against its 100-item capacity before any
-writes. Its own Bags + bank / Bags only setting controls inventory accounting.
+at a time. ItemFarmingTool checks the entire batch against its capacity before
+applying it. Its own Bags + bank / Bags only setting controls inventory accounting.
 
 The addon remembers material lists exported with version 0.3.0 onward. If a new
 route needs fewer of those items, it lists the old tracked goals for **manual
@@ -149,14 +150,15 @@ does not assume that an old goal belongs exclusively to ProfessionGuide.
 
 Modules have separate responsibilities: data and routes, saved recipe choices, game API detection,
 pure route planning with inventory reads, optional integration, UI, and lifecycle.
-Game events batch refreshes; no per-frame polling. The other addons in this
-workspace are unchanged.
+Game events batch refreshes. Publish the ItemFarmingTool build with the public
+API before releasing the ProfessionGuide build that uses it.
 
 From this repository's root, run with Python 3 and `lupa` (Lua 5.1):
 
 ```powershell
 python -m pip install --target .tools -r tests/requirements.txt
 python tests/test_addon.py
+python tests/test_package.py
 python tools/package.py
 ```
 
@@ -164,6 +166,10 @@ The suite executes the shipped Lua, checks every route and item ID, exercises
 UI callbacks and detection fallbacks, and tests opt-in exports against both a
 test double and the actual sibling ItemFarmingTool when present. The packager
 checks the ZIP's contents and CRCs and writes SHA-256 checksums.
+
+Pull requests and pushes to `main` run both offline suites. A `vX.Y.Z` tag
+matching the TOC version runs the same checks and publishes the verified ZIPs
+and checksum manifest.
 
 For a source refresh, install `beautifulsoup4` for development, then fetch fresh
 pages without overwriting the previous cache:
