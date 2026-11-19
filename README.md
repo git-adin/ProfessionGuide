@@ -1,4 +1,4 @@
-# ProfessionGuide 0.4.2
+# ProfessionGuide 0.4.3
 
 An independent WoW Forever addon (Interface 16001) with character-aware profession
 routes and optional, explicit exports to ItemFarmingTool. No addon dependency,
@@ -6,7 +6,8 @@ network access, library or developer tool is needed in game.
 
 ## Install and use
 
-Extract `dist/ProfessionGuide.zip` into `_forever_/Interface/AddOns/`. The resulting
+[Download ProfessionGuide.zip](https://github.com/git-adin/ProfessionGuide/releases/latest/download/ProfessionGuide.zip)
+and extract it into `_forever_/Interface/AddOns/`. The resulting
 path must be `AddOns/ProfessionGuide/ProfessionGuide.toc`. Enable ProfessionGuide
 and type `/pg` after logging in.
 You can also click the book button beside the minimap to open or close the Workshop.
@@ -127,7 +128,7 @@ or every informal recipe suggestion. See [SOURCES.md](SOURCES.md).
 
 ## Optional ItemFarmingTool integration
 
-Export requires an ItemFarmingTool build with `ItemFarmingToolAPI`. If the
+Export requires ItemFarmingTool 0.2.5 or later with `ItemFarmingToolAPI`. If the
 add-on is missing or needs an update, the planner and shopping list still work.
 `OptionalDeps` establishes load order when both add-ons are enabled.
 
