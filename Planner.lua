@@ -58,12 +58,12 @@ function ns.Plan(slug, player, target, choices)
             local step={from=lo,to=hi,action=s.action,choiceGroupID=s.choiceGroupID,recipes={}}
             if s.note then plan.warnings[#plan.warnings+1]=s.note end
             if s.level and player.level<s.level then plan.warnings[#plan.warnings+1]="This recipe requires character level "..s.level.."." end
-            local zone=player.faction=="Horde" and s.horde or s.alliance
+            local zone=player.faction=="Horde" and s.horde or player.faction=="Alliance" and s.alliance or nil
             if zone then step.action=(step.action or "").." Location: "..zone.."." end
             for _,r in ipairs(s.recipes or {}) do
                 local crafts=math.ceil(r.crafts*(hi-lo)/(s.to-s.from))
                 if r.minimum then plan.minimum=true end
-                step.recipes[#step.recipes+1]={name=r.name,crafts=crafts,minimum=r.minimum}
+                step.recipes[#step.recipes+1]={name=r.name,spell=r.spell,crafts=crafts,minimum=r.minimum}
                 supply[r.name]=(supply[r.name] or 0)+crafts*(r.yield or 1)
                 for _,m in ipairs(r.materials) do demand[m.name]=(demand[m.name] or 0)+math.ceil(m.quantity*crafts) end
                 if slug=="blacksmithing" and imperial[r.name] and ns.Safe(IsPlayerSpell,r.spell)~=true then

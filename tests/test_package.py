@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ADDON_NAME = "ProfessionGuide"
 SOURCE_DIR = "."
 EXPECTED = {'Character.lua',
+ 'Favorites.lua',
  'Choices.lua',
  'Core.lua',
  'Data.lua',
@@ -22,11 +23,14 @@ EXPECTED = {'Character.lua',
  'LICENSE',
  'Minimap.lua',
  'Planner.lua',
+ 'Pricing.lua',
+ 'ProfessionButton.lua',
  'ProfessionGuide.toc',
  'README.md',
  'Routes.lua',
  'SOURCES.md',
  'UI.lua'}
+EXPECTED.add('Trainers.lua')
 
 sys.path.insert(0, str(ROOT / "tools"))
 from package import build

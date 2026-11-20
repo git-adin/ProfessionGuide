@@ -6,7 +6,7 @@ sys.path.insert(0,str(ROOT.parent/'.tools'))
 sys.path.insert(0,str(ROOT/'.tools'))
 from lupa.lua51 import LuaRuntime
 
-FILES=['Data.lua','Routes.lua','Character.lua','Icons.lua','Choices.lua','Planner.lua','Integration.lua','UI.lua','Minimap.lua','Core.lua']
+FILES=['Data.lua','Routes.lua','Character.lua','Icons.lua','Choices.lua','Planner.lua','Favorites.lua','Pricing.lua','Trainers.lua','Integration.lua','UI.lua','Minimap.lua','ProfessionButton.lua','Core.lua']
 
 class AddonTests(unittest.TestCase):
     def setUp(self):
@@ -71,6 +71,282 @@ class AddonTests(unittest.TestCase):
                 end,
             }
         ''')
+
+    def test_professions_button_late_load_and_open_only(self):
+        self.check('''assert(ns.professionButton==nil)
+            ProfessionsFrame=CreateFrame('Frame',nil,UIParent)
+            ProfessionsFrame.BookPage=CreateFrame('Frame',nil,ProfessionsFrame)
+            ProfessionsFrame.CraftingPage=CreateFrame('Frame',nil,ProfessionsFrame)
+            ProfessionsFrame.CraftingPage:SetFrameLevel(100)
+            ProfessionsFrame.CraftingPage:Hide()
+            Fire('ADDON_LOADED','Blizzard_Professions')
+            local b=ns.professionButton
+            assert(b and b.parent==ProfessionsFrame and b:GetFrameLevel()>100)
+            Fire('ADDON_LOADED','AnotherAddon'); ns.InitProfessionButton()
+            assert(ns.professionButton==b)
+            ns.Command('hide'); b.scripts.OnClick(b)
+            assert(ns.frame:IsShown() and ns.db.selected=='alchemy')
+            assert(ns.plan==nil and next(ns.db.targets)==nil and next(ns.db.exports)==nil)
+            skills[2]={skillID=164,name='Blacksmithing',rank=130,maxRank=150}
+            ProfessionsFrame.CraftingPage:Show(); ProfessionsFrame.selectedSkillLine=164
+            b.scripts.OnClick(b)
+            assert(ns.db.selected=='blacksmithing' and ns.frame:IsShown())
+            b.scripts.OnClick(b); assert(ns.frame:IsShown())
+            assert(ns.plan==nil and next(ns.db.targets)==nil and next(ns.db.exports)==nil)
+            ProfessionsFrame:Hide(); assert(not b:IsShown())''')
+
+    def test_professions_button_available_at_login(self):
+        self.check('''ProfessionsBookFrame=CreateFrame('Frame',nil,UIParent)
+            Fire('PLAYER_LOGIN')
+            assert(ns.professionButton.parent==ProfessionsBookFrame)''')
+
+    def test_plan_route_favorites_only_learned_chosen_recipes(self):
+        self.check('''skills={{skillID=164,name='Blacksmithing',rank=130,maxRank=150}}; ns.Refresh()
+            ns.SetChoice('blacksmithing','bronze','bracers')
+            favorites={}; writes={}; infos={}
+            Professions={InLocalCraftingMode=function() return true end}
+            C_TradeSkillUI={GetBaseProfessionInfo=function() return {professionID=164} end,
+                GetRecipeInfo=function(id) return infos[id] end,
+                IsRecipeFavorite=function(id) return favorites[id]==true end,
+                SetRecipeFavorite=function(id,value) assert(value==true); writes[#writes+1]=id; favorites[id]=value end}
+            ns.SetTarget(150); ns.Render()
+            local id=ns.plan.steps[1].recipes[1].spell
+            assert(id==2672)
+            infos[id]={recipeID=id,learned=true}
+            local other=ns.plan.steps[2].recipes[1].spell
+            infos[other]={recipeID=other,learned=false}
+            assert(#writes==0)
+            ns.targetInput:SetText('150'); ns.applyButton.scripts.OnClick()
+            assert(#writes==1 and writes[1]==2672)
+            assert(ns.status:find('1 added') and ns.status:find('1 unlearned'))
+            ns.applyButton.scripts.OnClick(); assert(#writes==1)
+            assert(ns.status:find('1 already starred'))
+            ns.Refresh(); Fire('BAG_UPDATE_DELAYED'); Tick(); assert(#writes==1)
+            ns.targetInput:SetText('bad'); ns.applyButton.scripts.OnClick(); assert(#writes==1)
+            assert(next(ns.db.exports)==nil)''')
+
+    def test_favorites_deduplicate_failures_and_wrong_profession(self):
+        self.check('''local p={slug='alchemy',steps={{recipes={{spell=1},{spell=1},{spell=2},{spell=3}}}}}
+            assert(ns.FavoritePlanRecipes(p):find('unavailable'))
+            local writes=0
+            Professions={InLocalCraftingMode=function() return localMode end}
+            C_TradeSkillUI={GetBaseProfessionInfo=function() return {professionID=professionID} end,
+                GetRecipeInfo=function(id) return {recipeID=id,learned=true} end,
+                IsRecipeFavorite=function() return false end,
+                SetRecipeFavorite=function() writes=writes+1; error('unavailable') end}
+            localMode=true; professionID=164
+            assert(ns.FavoritePlanRecipes(p):find('Open your Alchemy')); assert(writes==0)
+            professionID=171; localMode=false
+            assert(ns.FavoritePlanRecipes(p):find('Open your Alchemy')); assert(writes==0)
+            localMode=true
+            assert(ns.FavoritePlanRecipes(p):find('3 unavailable')); assert(writes==3)
+            assert(ns.FavoritePlanRecipes({slug='alchemy',steps={}})=='')''')
+
+    def test_craft_cost_arithmetic_missing_prices_and_optional_provider(self):
+        self.check('''local r={yield=2,materials={{name='Bronze Bar',quantity=5},{name='Coarse Grinding Stone',quantity=2}}}
+            assert(ns.CraftCost(r)==nil)
+            assert(ns.CraftCostText(r):find('optional pricing addon not loaded'))
+            quotes={[2841]={101,150},[3478]={25,40}}
+            AuctionPriceLite={GetItemPrice=function(id) return unpack(quotes[id] or {}) end,
+                GetScanTime=function() return 10000 end}
+            local c=ns.CraftCost(r); assert(c.low==555 and c.average==830)
+            assert(#c.missingLow==0 and c.scannedAt==10000)
+            local t=ns.CraftCostText(r,16)
+            assert(t:find('5s 55c per craft') and t:find('88s 80c for 16 crafts'))
+            assert(t:find('Each craft makes 2') and t:find('Owned materials included'))
+            assert(ns.FormatCost(10001)=='1g 0s 1c' and ns.FormatCost(0.5)=='1c')
+            quotes[3478]={0,0/0}; c=ns.CraftCost(r)
+            assert(c.missingLow[1]=='Coarse Grinding Stone' and #c.missingAverage==1)
+            assert(ns.CraftCostText(r):find('incomplete'))
+            AuctionPriceLite.GetItemPrice=function() error('provider error') end
+            assert(#ns.CraftCost(r).missingLow==2)''')
+
+    def test_recipe_cost_refresh_does_not_export_or_favorite(self):
+        self.check('''local callbacks={}; local registrations=0
+            EventRegistry={RegisterCallback=function(_,event,callback)
+                registrations=registrations+1; callbacks[event]=callback end}
+            local price=100
+            AuctionPriceLite={GetItemPrice=function() return price,price*2 end}
+            ns.InitPricing(); ns.InitPricing(); assert(registrations==1)
+            ns.Command('show'); ns.SetTarget(5); ns.Render()
+            local before=ns.costCards[1].rows[1].total:GetText()
+            assert(ns.costCards[1].footer:GetText():find('4 crafts'))
+            assert(not ns.detailText:GetText():find('Craft cost'))
+            local favorites=0; ns.FavoritePlanRecipes=function() favorites=favorites+1 end
+            price=200; callbacks['AuctionPriceLite.PricesChanged'](); Tick()
+            assert(ns.costCards[1].rows[1].total:GetText()~=before and favorites==0)
+            assert(next(ns.db.exports)==nil)
+            ns.Command('hide'); callbacks['AuctionPriceLite.PricesChanged'](); Tick()
+            assert(not ns.frame:IsShown())''')
+
+    def test_optional_pricing_providers_and_coverage_fallback(self):
+        self.check('''local r={materials={{name='Bronze Bar',quantity=5},{name='Coarse Grinding Stone',quantity=2}}}
+            TSM_API={GetCustomPriceValue=function(source,item)
+                assert(item=='i:2841' or item=='i:3478')
+                if source=='DBMinBuyout' then return 100 end
+                assert(source=='DBMarket'); return 150 end}
+            local c=ns.CraftCost(r); assert(c.source=='TradeSkillMaster' and c.low==700 and c.average==1050)
+            assert(ns.CraftCostText(r):find('DBMarket'))
+            AuctionPriceLite={GetItemPrice=function() return nil end}
+            assert(ns.CraftCost(r).source=='TradeSkillMaster')
+            TSM_API=nil; AuctionPriceLite=nil
+            local queried={}
+            AucAdvanced={API={GetMarketValue=function(link)
+                queried[link]=true; return 200,99 end}}
+            c=ns.CraftCost(r); assert(c.source=='Auctioneer' and c.average==1400)
+            assert(queried['item:2841'] and queried['item:3478'])
+            assert(ns.CraftCostText(r):find('Market value') and not ns.CraftCostText(r):find('AH low'))
+            AucAdvanced=nil
+            Auctionator={API={v1={GetAuctionPriceByItemID=function(caller,id)
+                assert(caller=='ProfessionGuide' and (id==2841 or id==3478)); return 50 end}}}
+            c=ns.CraftCost(r); assert(c.source=='Auctionator' and c.low==350)
+            assert(ns.CraftCostText(r):find('Last scanned buyout'))
+            Auctionator=nil
+            assert(ns.CraftCost(r)==nil)
+            ns.Command('show'); ns.SetTarget(5); ns.Render()
+            assert(ns.plan and ns.frame:IsShown() and ns.costCards[1].footer:GetText():find('No pricing data provider'))''')
+
+    def test_actual_auctionpricelite_public_api(self):
+        source=ROOT.parent/'checkouts/AuctionPriceLite/AuctionPriceLite/Core.lua'
+        if not source.exists(): self.skipTest('Optional AuctionPriceLite checkout unavailable')
+        self.check('''GetCurrentRegion=function() return 1 end
+            C_GameRules={GetCurrentGameModeRecordID=function() return 15 end}
+            Enum.TooltipDataType={Item=0}
+            TooltipDataProcessor={AddTooltipPostCall=function() end}
+            EventRegistry={RegisterCallback=function() end,TriggerEvent=function() end}
+            AuctionPriceLiteDB={snapshots={['1:15:Alliance']={prices={[2841]=101,[3478]=25},
+                averages={[2841]=150,[3478]=40},scannedAt=10000,count=2}}}''')
+        self.lua.execute(source.read_text(encoding='utf-8'),'AuctionPriceLite',self.lua.table())
+        self.check('''Fire('ADDON_LOADED','AuctionPriceLite'); Fire('PLAYER_ENTERING_WORLD')
+            local c=ns.CraftCost({materials={{name='Bronze Bar',quantity=5},{name='Coarse Grinding Stone',quantity=2}}})
+            assert(c.source=='AuctionPriceLite' and c.low==555 and c.average==830 and c.scannedAt==10000)''')
+
+    def test_training_notes_filter_faction_and_hide_rows(self):
+        self.check('''skills={{skillID=164,name='Blacksmithing',rank=131,maxRank=150}}; ns.Refresh()
+            ns.player.faction='Horde'; ns.showNotes=true; ns.Render()
+            assert(ns.trainingHeader:GetText():find('Horde') and ns.trainingHeader:GetText():find('Ready to train'))
+            assert(ns.trainingRows[1].label:GetText():find('Saru Steelfury'))
+            assert(not ns.trainingRows[1].label:GetText():find('Bengus'))
+            assert(ns.trainingRows[2].label:GetText():find('Brikk'))
+            assert(not ns.trainingRows[3]:IsEnabled())
+            ns.player.faction='Alliance'; ns.Render()
+            assert(ns.trainingRows[1].label:GetText():find('Bengus'))
+            ns.player.faction=nil; ns.Render()
+            assert(ns.trainingHeader:GetText():find('Only neutral'))
+            assert(ns.trainingRows[1].label:GetText():find('Brikk'))
+            assert(not ns.trainingRows[3]:IsShown())
+            ns.showNotes=false; ns.Render()
+            assert(not ns.trainingHeader:IsShown() and not ns.trainingRows[1]:IsShown())
+            for slug,entries in pairs(ns.Trainers) do
+                for _,entry in ipairs(entries) do
+                    assert(entry.name and entry.location and entry.role)
+                    if entry.map then assert(entry.x>0 and entry.x<100 and entry.y>0 and entry.y<100) end
+                end
+            end''')
+
+    def test_trainer_pin_success_failure_and_faction_guards(self):
+        self.check('''ns.player.faction='Horde'
+            local entry=ns.TrainersFor('blacksmithing')[1]
+            local pins,opens=0,0
+            UiMapPoint={CreateFromCoordinates=function(map,x,y)
+                assert(map==1454 and x==82.3/100 and y==22.8/100)
+                return {uiMapID=map,x=x,y=y} end}
+            C_Map={CanSetUserWaypointOnMap=function() return allowed end,
+                SetUserWaypoint=function(point) pins=pins+1; return pinResult end,
+                OpenWorldMap=function(map) assert(map==1454); opens=opens+1 end}
+            C_SuperTrack={SetSuperTrackedUserWaypoint=function(value) assert(value); tracked=true end}
+            allowed=true; pinResult=true
+            local ok,message=ns.PinTrainer(entry)
+            assert(ok and message:find('Saru') and pins==1 and opens==1 and tracked)
+            InCombatLockdown=function() return true end
+            assert(ns.PinTrainer(entry)); assert(pins==2 and opens==1)
+            allowed=false; assert(not ns.PinTrainer(entry)); assert(pins==2)
+            allowed=true; pinResult=false; assert(not ns.PinTrainer(entry)); assert(opens==1)
+            ns.player.faction='Alliance'; assert(not ns.PinTrainer(entry)); assert(pins==3)
+            C_Map=nil; ns.player.faction='Horde'; assert(not ns.PinTrainer(entry))
+            assert(next(ns.db.targets)==nil and next(ns.db.exports)==nil)''')
+
+    def test_guide_button_above_title_border_and_first_aid_switch(self):
+        self.check('''ProfessionsFrame=CreateFrame('Frame',nil,UIParent)
+            local shown=0
+            ProfessionsFrame:SetScript('OnShow',function() shown=shown+1 end)
+            for _,key in ipairs({'BookPage','CraftingPage','NineSlice','TitleContainer','CloseButton'}) do
+                ProfessionsFrame[key]=CreateFrame('Frame',nil,ProfessionsFrame)
+            end
+            ProfessionsFrame.BookPage:SetFrameLevel(100)
+            ProfessionsFrame.CraftingPage:SetFrameLevel(100)
+            ProfessionsFrame.NineSlice:SetFrameLevel(500)
+            ProfessionsFrame.TitleContainer:SetFrameLevel(510)
+            ProfessionsFrame.CloseButton:SetFrameLevel(510)
+            Fire('ADDON_LOADED','Blizzard_Professions')
+            local b=ns.professionButton
+            assert(b:GetFrameLevel()>510 and b:IsShown())
+            local point,relative,relativePoint,x=b:GetPoint()
+            assert(point=='RIGHT' and relative==ProfessionsFrame.CloseButton and relativePoint=='LEFT' and x<0)
+            ProfessionsFrame.NineSlice:SetFrameLevel(750)
+            ProfessionsFrame:GetScript('OnSizeChanged')(ProfessionsFrame)
+            assert(b:GetFrameLevel()>750)
+            b:Hide(); ProfessionsFrame:GetScript('OnShow')(ProfessionsFrame)
+            assert(b:IsShown() and shown==1)
+            ProfessionsFrame.TitleContainer:SetFrameLevel(800)
+            ProfessionsFrame.CraftingPage:GetScript('OnShow')(ProfessionsFrame.CraftingPage)
+            assert(b:GetFrameLevel()>800)
+            skills={{skillID=129,name='First Aid',rank=106,maxRank=150}}
+            ProfessionsFrame.selectedSkillLine=129
+            b:GetScript('OnClick')(b)
+            assert(ns.db.selected=='first-aid' and ns.frame:IsShown())
+            assert(next(ns.db.targets)==nil and next(ns.db.exports)==nil)
+            ProfessionsFrame:Hide(); assert(not b:IsShown())''')
+
+    def test_workshop_cost_table_and_shopping_hierarchy(self):
+        self.check('''skills={{skillID=165,name='Leatherworking',rank=205,maxRank=300}}
+            owned={[4304]=4}; ns.Refresh(); ns.Command('show')
+            AuctionPriceLite={GetItemPrice=function() return 100,200 end}
+            ns.SetTarget(225); ns.Render()
+            assert(ns.recipeText:GetText()=='Nightscape Pants')
+            local card=ns.costCards[1]
+            assert(card:IsShown() and card.each:GetText()=='Each craft' and card.total:GetText()=='This step')
+            assert(card.rows[1].each:GetText()=='18s 0c')
+            assert(card.rows[1].total:GetText():find('4g 32s 0c'))
+            assert(card.rows[2].total:GetText():find('8g 64s 0c'))
+            assert(not ns.detailText:GetText():find('AuctionPriceLite'))
+            assert(card.helpRows[3][1]=='Owned materials' and card.helpRows[3][2]=='Included in value')
+            assert(ns.tableHead[2].title=='In bags' and ns.tableHead[3].title=='Required' and ns.tableHead[4].title=='To get')
+            for _,row in ipairs(ns.materialRows) do
+                if row.itemID==4304 then
+                    assert(row.have:GetText()=='4' and row.need:GetText()=='336' and row.short:GetText():find('332'))
+                end
+            end
+            AuctionPriceLite.GetItemPrice=function(id)
+                if id~=ns.ItemIDs['Silken Thread'] then return 100,200 end end
+            ns.Render()
+            assert(card.rows[1].each:GetText():find('Missing prices') and card.rows[1].total:GetText():find('—'))
+            assert(#card.missingPrices==1 and card.missingPrices[1]=='Silken Thread')
+            ns.showNotes=true; ns.Render(); assert(not card:IsShown())
+            ns.showNotes=false; ns.clearButton:GetScript('OnClick')()
+            assert(card.rows[1].total:GetText():find('—'))
+            skills={{skillID=186,name='Mining',rank=125,maxRank=225}}; ns.Refresh()
+            assert(not card:IsShown())''')
+
+    def test_cost_tooltip_is_short_structured_and_deduplicates_missing_prices(self):
+        self.check('''AuctionPriceLite={GetItemPrice=function(id)
+                if id~=3371 then return 100,200 end end}
+            ns.Command('show'); ns.SetTarget(5); ns.Render()
+            local card=ns.costCards[1]
+            local lines,rows={},{}
+            local clears=0
+            GameTooltip={SetOwner=function() end,ClearLines=function() clears=clears+1; lines={}; rows={} end,
+                AddLine=function(_,value) lines[#lines+1]=value end,
+                AddDoubleLine=function(_,label,value) rows[#rows+1]={label,value} end,
+                Show=function() tooltipShown=true end,Hide=function() tooltipShown=false end}
+            card:GetScript('OnEnter')(card)
+            assert(clears==1 and tooltipShown and lines[1]=='Pricing details')
+            assert(#rows==3 and rows[1][2]=='AuctionPriceLite' and rows[2][2]=='Selected step')
+            assert(#card.missingPrices==1 and card.missingPrices[1]=='Empty Vial')
+            local body=table.concat(lines,' ')
+            assert(body:find('Empty Vial') and not body:find('per craft; about') and #body<160)
+            card:GetScript('OnLeave')(card); assert(not tooltipShown)
+            card:GetScript('OnEnter')(card); assert(clears==2 and #rows==3)''')
 
     def test_no_target_no_plan_or_export(self):
         self.check('''assert(ns.plan==nil and next(ns.db.targets)==nil)
@@ -267,7 +543,7 @@ class AddonTests(unittest.TestCase):
         self.check('''ns.Command('show'); ns.SetTarget(120); ns.Render()
             ns.notesButton:GetScript('OnClick')()
             assert(ns.showNotes and ns.notesText:IsShown() and not ns.recipeText:IsShown())
-            assert(ns.notesText:GetText():find('Ainethil'))
+            assert(ns.trainingRows[1].label:GetText():find('Ainethil'))
             ns.notesButton:GetScript('OnClick')()
             assert(not ns.showNotes and ns.recipeText:IsShown())
             ns.clearButton:GetScript('OnClick')()
@@ -296,9 +572,12 @@ class AddonTests(unittest.TestCase):
             ns.SetTarget(150); ns.Render()
             assert(ns.recipeText:GetText():find('Heavy Blasting Powder'))
             assert(ns.recipeText:GetText():find('Whirring Bronze Gizmo'))
+            assert(ns.costCards[1].title:GetText()=='Heavy Blasting Powder')
+            assert(ns.costCards[2].title:GetText()=='Whirring Bronze Gizmo')
             skills={{skillID=186,name='Mining',rank=125,maxRank=150}}; ns.Refresh()
             ns.SetTarget(175); ns.Render()
             assert(ns.recipeText:GetText()=='Gathering route')
+            assert(not ns.costCards[1]:IsShown() and not ns.costCards[2]:IsShown())
             assert(ns.detailText:GetText():find('Thousand Needles'))
             assert(#ns.plan.materials==0 and not ns.exportButton.enabled)''')
 

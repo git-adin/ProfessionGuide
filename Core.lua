@@ -104,13 +104,16 @@ ns.events=events
 events:RegisterEvent("ADDON_LOADED"); events:RegisterEvent("PLAYER_LOGIN")
 events:SetScript("OnEvent",function(self,event,name)
     if event=="ADDON_LOADED" then
-        if name==addon then ns.LoadSettings() end
+        if name==addon then ns.LoadSettings()
+        elseif ns.frame then ns.InitProfessionButton(); ns.InitPricing() end
     elseif event=="PLAYER_LOGIN" then
         ns.LoadSettings(); ns.player=ns.ReadCharacter(); ns.CreateUI()
         ns.InitMinimapButton()
+        ns.InitProfessionButton()
+        ns.InitPricing()
         SlashCmdList.PROFESSIONGUIDE=ns.Command
         SLASH_PROFESSIONGUIDE1,SLASH_PROFESSIONGUIDE2="/pg","/professionguide"
-        for _,e in ipairs({"SKILL_LINES_CHANGED","CHAT_MSG_SKILL","PLAYER_LEVEL_UP","PLAYER_ENTERING_WORLD","BAG_UPDATE_DELAYED","TRADE_SKILL_CLOSE","GET_ITEM_INFO_RECEIVED"}) do self:RegisterEvent(e) end
+        for _,e in ipairs({"SKILL_LINES_CHANGED","CHAT_MSG_SKILL","PLAYER_LEVEL_UP","PLAYER_ENTERING_WORLD","BAG_UPDATE_DELAYED","TRADE_SKILL_CLOSE","GET_ITEM_INFO_RECEIVED","AUCTION_HOUSE_CLOSED"}) do self:RegisterEvent(e) end
         ns.Refresh()
     elseif ns.db and ns.frame then
         if event=="GET_ITEM_INFO_RECEIVED" and not (ns.itemRequested and ns.itemRequested[name]) then return end
