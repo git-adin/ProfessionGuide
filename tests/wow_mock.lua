@@ -139,4 +139,5 @@ function IsShiftKeyDown() return shifted end
 function GetCursorInfo() return unpack(cursor or {}) end
 function ClearCursor() cursor = nil end
 GameTooltip = {SetOwner=function() end, SetHyperlink=function() end, AddLine=function() end,
+    AddDoubleLine=function() end, ClearLines=function() end,
     Show=function() end, Hide=function() end}

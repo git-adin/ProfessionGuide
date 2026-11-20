@@ -1,4 +1,4 @@
-# ProfessionGuide 0.4.3
+# ProfessionGuide 0.5.1
 
 An independent WoW Forever addon (Interface 16001) with character-aware profession
 routes and optional, explicit exports to ItemFarmingTool. No addon dependency,
@@ -12,12 +12,21 @@ path must be `AddOns/ProfessionGuide/ProfessionGuide.toc`. Enable ProfessionGuid
 and type `/pg` after logging in.
 You can also click the book button beside the minimap to open or close the Workshop.
 Drag it around the minimap; its position and visibility are saved per character.
+The compact **Guide** book button in the Blizzard professions window's title bar,
+beside Close, opens the Workshop too. From a recipe tab it selects that profession; from the
+overview it keeps your last selection. Opening the guide never sets a target or
+exports farming goals.
 
 1. Click the profession button to cycle through your learned professions.
 2. Enter the **profession skill** you want to reach (1–300), then click **Plan route**.
+   This also adds learned recipes in the chosen remaining route to Blizzard's
+   recipe favorites when that profession is open. Existing favorites stay in
+   place. Unlearned recipes are skipped; if the profession is closed, open it and
+   click **Plan route** again. Bag updates and changing alternatives do not add
+   favorites automatically; click **Plan route** to favorite a revised route.
 3. Select a step in the left route list to see its recipes, estimated crafts and
    ingredients on the right. The shopping table always covers the entire target,
-   with separate **Have**, **Need** and **Short** columns and item tooltips.
+   with separate **In bags**, **Required** and **To get** columns and item tooltips.
    Where available, use **Recipe option** to choose an alternate and **Compare
    alternatives** to see requirements and material changes before switching.
 4. Open **Training & notes** for trainer locations, rank requirements and source
@@ -29,7 +38,7 @@ Drag it around the minimap; its position and visibility are saved per character.
 The guide detects profession skill, trained maximum, character level and faction.
 All six crafting professions, Mining, Herbalism, Skinning, First Aid, Cooking,
 Fishing and Lockpicking are covered. Gathering guides show activities and zones
-instead of invented material quantities. Trainer pairs are Alliance / Horde.
+instead of invented material quantities. Trainer information follows your faction.
 Targets and window position are saved per character. Drag the background/title to
 move the window; Close or Escape hides it. `/pg reset` restores the position.
 The Workshop window uses separate scrolling for the route list and recipe/shopping
@@ -52,6 +61,44 @@ generic logo for legacy recipe spell IDs.
 | `/pg minimap` | Toggle minimap button visibility |
 | `/pg minimap show` / `/pg minimap hide` | Show / hide minimap button |
 | `/pg minimap reset` | Restore minimap button position and show it |
+
+## Training & trainer pins
+
+Training & notes separates rank requirements, trainers/books, profession notes,
+planning help and source information. Faction-specific trainers and tips follow
+the detected Horde or Alliance faction; neutral contacts remain visible. If the
+faction is unknown, only neutral contacts appear.
+
+Click a blue trainer name to place and track a native map waypoint and open that
+zone's map. This replaces your current waypoint. Locations without verified
+coordinates stay plain text. If the map does not allow waypoints, the status line
+gives the trainer's location instead. In combat the pin can be placed, but the map
+is not opened. No map addon or NPC database is required at runtime.
+
+## Craft cost estimates
+
+Costs appear in a separate card with **Each craft** and **This step** columns.
+The shopping list covers the entire remaining route; the cost card covers only
+the displayed recipe's step. Hover the card for missing ingredients, price
+limitations and details about owned supplies. The card footer names the provider,
+scan time when available, and planned craft count. Missing prices are explicit,
+and step totals stay blank until a target is planned.
+
+Pricing addons are optional. Supported public APIs: AuctionPriceLite (minimum
+buyout and full-scan average), Auctionator v1 (last scanned buyout),
+TradeSkillMaster (`DBMinBuyout` and `DBMarket`), and Auctioneer Advanced
+(`AucAdvanced.API.GetMarketValue`). Each recipe shows its material cost per craft
+and the estimated total for its remaining crafts when a target is planned.
+Recipes producing multiple items say how many they make.
+Materials already owned are included. Vendor reagents and prepared materials need
+their own saved prices; missing quotes are labeled incomplete, never priced as
+zero. Each recipe uses one provider, choosing the best ingredient coverage;
+ties prefer AuctionPriceLite, Auctionator, TradeSkillMaster, then Auctioneer.
+Buyouts, scan averages and market values have separate labels. The provider and
+scan time (when available) are shown. AuctionPriceLite scan/lookup updates refresh
+automatically; all providers refresh when the AH closes or you click Refresh.
+Populate/update prices using your auction addon's normal scan or data update.
+All guide and planning features work with none of these addons installed.
 
 ## Recipe alternatives
 

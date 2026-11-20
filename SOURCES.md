@@ -28,16 +28,16 @@ requirements are calculated from the remaining steps and chosen target.
 
 Default branch policy: first continuous recipe branch, the active Strange Dust
 Enchanting tab, First Aid bandages at low skill and the first cooking-table option;
-both Engineering 135–150 components are required. Reviewed alternate branches
+both Engineering 135â€“150 components are required. Reviewed alternate branches
 are defined in `tools/alternate_routes.py`, including linked replacements. Cooking
 table options retain ingredient facts and vendor/quest locations, not guide prose.
 Sparse suggestions without verifiable ingredients are not compiled as recipes.
 Where the source gives ingredients but no craft count, explicit minimum estimates
-are marked in the compiled data and UI. Lesser Agility 165–185 uses 22 crafts,
+are marked in the compiled data and UI. Lesser Agility 165â€“185 uses 22 crafts,
 inferred from the source alternative shopping list (39 Soul Dust minus the rod
 and oil requirements). Smoked Bear Meat uses the upper end of its source range.
-Tailoring now has a complete 1–300 route, with rare-pattern and station caveats.
-Leatherworking 1–30 now uses the source's 35 crafts and 105 scraps. Fire Oil and
+Tailoring now has a complete 1â€“300 route, with rare-pattern and station caveats.
+Leatherworking 1â€“30 now uses the source's 35 crafts and 105 scraps. Fire Oil and
 Stonescale Oil produce two per craft. See [SOURCE_UPDATE_AUDIT.md](SOURCE_UPDATE_AUDIT.md)
 for changed ranges, removed branches, manual sources and gathering corrections.
 
@@ -50,3 +50,13 @@ in the [UI source mirror](https://github.com/Gethe/wow-ui-source/tree/live/Inter
 Recipe fallback paths reference Blizzard icon names in the guide links. These
 are client texture references; no website images or Blizzard image files ship
 with the addon.
+
+## Trainer locations
+
+Trainer roles and profession notes follow the Forever guides listed above.
+The static trainer map IDs and coordinates in `Trainers.lua` were cross-referenced
+against the installed ForeverDB `NPCs.lua` snapshot on 2026-11-18. Only coordinate
+facts are included; no NPC database addon is required. Coordinates are approximate
+points, not walking routes. Contacts without coordinates, including Annora inside
+Uldaman and newer recipe vendors, remain text only. Map pins use the client's
+native `C_Map` waypoint API and are created only by clicking a trainer name.
