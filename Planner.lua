@@ -50,7 +50,7 @@ function ns.Plan(slug, player, target, choices)
         end
         for _,opt in ipairs(group.options) do for _,block in ipairs(opt.blocks) do for _,s in ipairs(block.steps) do learn(s) end end end
     end
-    local imperialUsed=false
+    local imperialUsed={}
     for _,s in ipairs(ns.GetGuideSteps(slug,choices)) do
         learn(s)
         if s.to>skill.rank and s.from<limit then
@@ -66,10 +66,12 @@ function ns.Plan(slug, player, target, choices)
                 step.recipes[#step.recipes+1]={name=r.name,spell=r.spell,crafts=crafts,minimum=r.minimum}
                 supply[r.name]=(supply[r.name] or 0)+crafts*(r.yield or 1)
                 for _,m in ipairs(r.materials) do demand[m.name]=(demand[m.name] or 0)+math.ceil(m.quantity*crafts) end
-                if slug=="blacksmithing" and imperial[r.name] and ns.Safe(IsPlayerSpell,r.spell)~=true then
-                    demand["Thorium Bar"]=(demand["Thorium Bar"] or 0)+imperial[r.name]
+                if slug=="blacksmithing" and imperial[r.name] and not imperialUsed[r.name] then
+                    imperialUsed[r.name]=true
+                    if ns.Safe(IsPlayerSpell,r.spell)~=true then
+                        demand["Thorium Bar"]=(demand["Thorium Bar"] or 0)+imperial[r.name]
+                    end
                 end
-                if imperial[r.name] then imperialUsed=true end
             end
             plan.steps[#plan.steps+1]=step
         end
@@ -78,7 +80,7 @@ function ns.Plan(slug, player, target, choices)
         demand["Giant Egg"],demand["Zesty Clam Meat"],demand["Alterac Swiss"]=12,10,20
         plan.warnings[#plan.warnings+1]="Artisan Cooking quest supplies are included."
     end
-    if slug=="blacksmithing" and imperialUsed then
+    if next(imperialUsed) then
         plan.warnings[#plan.warnings+1]="Imperial Plate: level 50 required. Complete A Blue Light Bargain to unlock Derotain Mudsipper's recipe quests. Recipe quest bars are included unless the recipe is detected as known."
     end
     if ((slug=="engineering" and target>200) or (slug=="leatherworking" and target>205)) and player.level<35 then

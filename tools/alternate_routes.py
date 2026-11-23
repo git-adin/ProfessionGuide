@@ -1,4 +1,4 @@
-"""Reviewed branch definitions for the 2026-11-18 source snapshot.
+"""Reviewed branch definitions for the 2026-11-23 source snapshot.
 
 Only recipe facts are retained. Notes are original summaries. A minimum-count
 branch is explicitly flagged when the source gives ingredients but no estimate.
@@ -28,13 +28,14 @@ def build(guides, soups, recipe, items):
           'Changes 250-300 together. Skip Stonescale Oil. Superior Mana recipe: Algernon (Undercity) or Ulthir (Darnassus).'))
     add('blacksmithing','silver','Belt or rod',[[75,80]],'Silver Rod',
         o('belt','Runed Copper Belt',[b(75,80,s(75,80,'5x Runed Copper Belt - 50 Copper Bar'))]))
-    add('blacksmithing','bronze','Bronze recipe',[[125,140]],'Bronze Shortsword',
-        o('bracers','Patterned Bronze Bracers',[b(125,140,s(125,140,'24x Patterned Bronze Bracers - 120 Bronze Bar, 48 Coarse Grinding Stone'))]))
-    add('blacksmithing','spurs','Mithril path',[[215,245]],'Heavy Mithril path',
-        o('spurs','Mithril Spurs path (215-245)',[b(215,245,
-            s(215,225,'10x Mithril Spurs - 40 Mithril Bar, 30 Solid Grinding Stone'),
-            s(225,230,'5x Dense Sharpening Stone - 5 Dense Stone'),
-            s(230,245,'33x Mithril Spurs - 132 Mithril Bar, 99 Solid Grinding Stone'))],
+    add('blacksmithing','bronze','Bronze recipe',[[125,140]],'Silvered Bronze Gauntlets',
+        o('warhammer','Bronze Warhammer',[b(125,140,s(125,140,'15x Bronze Warhammer - 120 Bronze Bar, 15 Strong Flux, 15 Medium Leather'))],
+          'Buy Strong Flux from a Blacksmithing supply vendor.'))
+    add('blacksmithing','spurs','Mithril path',[[210,245]],'Heavy Mithril path',
+        o('spurs','Mithril Spurs path (210-245)',[b(210,245,
+            s(210,225,'15x Mithril Spurs - 60 Mithril Bar, 45 Solid Grinding Stone'),
+            s(225,235,'16x Dense Sharpening Stone - 16 Dense Stone'),
+            s(235,245,'28x Mithril Spurs - 112 Mithril Bar, 84 Solid Grinding Stone'))],
           'Requires world-drop Plans: Mithril Spurs. Skips Imperial Plate Belt. Replaces any selected 240-270 alternate path.'))
     groups['blacksmithing'][-1]['conflicts']=['imperial']
     bracers=s(255,270,'17x Imperial Plate Bracers - 340 Thorium Bar, 17 Star Ruby')
@@ -50,6 +51,15 @@ def build(guides, soups, recipe, items):
     groups['blacksmithing'][-1]['options'][0].update(level=50,
         note='Imperial Plate recipe quests: Derotain Mudsipper, Tanaris. Complete A Blue Light Bargain first; level 50 required.')
     groups['blacksmithing'][-1]['conflicts']=['spurs']
+    add('blacksmithing','finish','Blacksmithing finishing route',[[270,300]],'Radiant Boots, then Radiant Leggings',
+        o('thorium','Imperial Plate Bracers, then Thorium Leggings',[b(270,300,
+            s(270,275,'11x Imperial Plate Bracers - 220 Thorium Bar, 11 Star Ruby'),
+            s(275,300,'27x Thorium Leggings - 702 Thorium Bar, 108 Red Power Crystal'))],
+          'Thorium Leggings require world-drop plans. Imperial Plate Bracers require the recipe quest at level 50.',level=50),
+        o('imperial','Imperial Plate Boots, then Imperial Plate Leggings',[b(270,300,
+            s(270,290,'20x Imperial Plate Boots - 680 Thorium Bar, 20 Star Ruby, 20 Aquamarine'),
+            s(290,300,'10x Imperial Plate Leggings - 440 Thorium Bar, 20 Star Ruby'))],
+          'Both recipes are earned from Derotain Mudsipper in Tanaris.',level=50))
     # Use the site's active dust tab as a consistent default, including 20-70.
     dust=[]; essence=[]
     for tab,dest in [('tab2-70-150',dust),('tab1-70-150',essence)]:
@@ -79,8 +89,8 @@ def build(guides, soups, recipe, items):
             s(165,185,'22x Enchant Boots - Lesser Agility - 22 Soul Dust'),
             s(185,200,'15x Enchant Bracer - Strength - 15 Vision Dust'))],
           'The 22 boot crafts are inferred from the source shopping-list alternative.'))
-    add('enchanting','lotus','Oil or enchant',[[250,265]],'Lesser Mana Oil',
-        o('strength','Enchant Bracer - Greater Strength',[b(250,265,s(250,265,'15x Enchant Bracer - Greater Strength - 15 Dream Dust, 30 Lesser Nether Essence',True))],
+    add('enchanting','lotus','Oil or enchant',[[250,270]],'Lesser Mana Oil',
+        o('strength','Enchant Bracer - Greater Strength',[b(250,270,s(250,270,'20x Enchant Bracer - Greater Strength - 20 Dream Dust, 40 Lesser Nether Essence',True))],
           'Annora teaches this. Minimum craft count only: the source provides no estimate; allow extra materials.'))
     add('enchanting','finish','Final skill point',[[299,300]],'Runed Arcanite Rod',
         o('shield','One more Greater Stamina shield enchant',[b(299,300,s(299,300,'1x Enchant Shield - Greater Stamina - 6 Dream Dust',True))],
@@ -90,11 +100,12 @@ def build(guides, soups, recipe, items):
     add('engineering','scope','Scope or powder',[[125,135]],'Standard Scope',
         o('powder','Heavy Blasting Powder',[b(125,135,s(125,135,'10x Heavy Blasting Powder - 10 Heavy Stone',True))],
           'Minimum craft count only: source gives no estimate for this alternate. Save the powder for later steps.'))
-    add('leatherworking','light-hides','Early hide or leather path',[[30,55]],'Cured Light Hide',
-        o('kits','Armor Kits, then Embossed Leather Gloves',[b(30,55,
-            s(30,45,'24x Light Armor Kit - 24 Light Leather'),
-            s(45,55,'10x Embossed Leather Gloves - 30 Light Leather, 20 Coarse Thread'))],
-          'Useful while gathering your own leather. You still need 24 Cured Light Hides for the pants at 100; missing hides are included in later material totals.'))
+    add('leatherworking','light-hides','Early hide or leather path',[[30,40]],'Cured Light Hide',
+        o('kits','Light Armor Kits',[b(30,40,s(30,40,'14x Light Armor Kit - 14 Light Leather'))],
+          'The default pants at 70 still need 10 Cured Light Hides. Choose gloves at 70 to skip them.'))
+    add('leatherworking','early-gloves','Pants or gloves',[[70,80]],'Embossed Leather Pants',
+        o('gloves','Embossed Leather Gloves',[b(70,80,
+            s(70,80,'14x Embossed Leather Gloves - 42 Light Leather, 28 Coarse Thread'))]))
     add('leatherworking','shoes','Gauntlets or shoes',[[235,265]],'Wicked Leather Gauntlets',
         o('shoes','Blue Suede Shoes',[b(235,265,s(235,265,'36x Blue Suede Shoes - 288 Rugged Leather, 36 Blue Dye, 36 Rune Thread'))],
           'Requires the Blue Suede Shoes pattern. Source compares vendor resale value; no live auction price is assumed.'))
@@ -121,6 +132,12 @@ def build(guides, soups, recipe, items):
             s(90,125,'54x Simple Poultice - 54 Spider Ichor, 54 Mild Spices, 54 Bottle of Dalaran Noir'),
             s(125,150,'31x Healing Potion - 31 Bruiseweed, 31 Hot Spices, 31 Leaded Vial'))],
           'Linked 90-150 path. Buy spices from Cooking suppliers, vials from Alchemy suppliers and Bottle of Dalaran Noir from barkeeps; use capital-city vendors for Hot Spices and Leaded Vials.'))
+
+    add('first-aid','artisan','Bandages or healing potions',[[260,300]],'Runecloth bandages',
+        o('potions','Runecloth Bandage, then Major Healing Potion',[b(260,300,
+            s(260,275,'22x Runecloth Bandage - 22 Runecloth'),
+            s(275,300,'30x Major Healing Potion - 30 Golden Sansam, 90 Soothing Spices, 30 Crystal Vial'))],
+          'Bandage count is scaled from the guide. Potion manual: Pexmit in Mount Hyjal, the Auction House, or the Horde quest A Rest Without Pain.'))
 
     # Cooking offers several complete recipe rows at each skill band.
     lo,hi=1,50

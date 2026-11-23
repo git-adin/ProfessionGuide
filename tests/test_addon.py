@@ -102,7 +102,7 @@ class AddonTests(unittest.TestCase):
 
     def test_plan_route_favorites_only_learned_chosen_recipes(self):
         self.check('''skills={{skillID=164,name='Blacksmithing',rank=130,maxRank=150}}; ns.Refresh()
-            ns.SetChoice('blacksmithing','bronze','bracers')
+            ns.SetChoice('blacksmithing','bronze','warhammer')
             favorites={}; writes={}; infos={}
             Professions={InLocalCraftingMode=function() return true end}
             C_TradeSkillUI={GetBaseProfessionInfo=function() return {professionID=164} end,
@@ -111,13 +111,13 @@ class AddonTests(unittest.TestCase):
                 SetRecipeFavorite=function(id,value) assert(value==true); writes[#writes+1]=id; favorites[id]=value end}
             ns.SetTarget(150); ns.Render()
             local id=ns.plan.steps[1].recipes[1].spell
-            assert(id==2672)
+            assert(id==9985)
             infos[id]={recipeID=id,learned=true}
             local other=ns.plan.steps[2].recipes[1].spell
             infos[other]={recipeID=other,learned=false}
             assert(#writes==0)
             ns.targetInput:SetText('150'); ns.applyButton.scripts.OnClick()
-            assert(#writes==1 and writes[1]==2672)
+            assert(#writes==1 and writes[1]==9985)
             assert(ns.status:find('1 added') and ns.status:find('1 unlearned'))
             ns.applyButton.scripts.OnClick(); assert(#writes==1)
             assert(ns.status:find('1 already starred'))
@@ -766,11 +766,9 @@ class AddonTests(unittest.TestCase):
             ns.SetTarget(225); assert(ns.SetChoice('tailoring','bags','belts')); ns.Render()
             assert(ns.warningText:GetText():find('level 35'))
             assert(not ns.SetChoice('alchemy','invalid','invalid'))
-            local found=false
-            for _,g in ipairs(ns.Alternates.cooking) do for _,o in ipairs(g.options) do
-                if o.faction=='Horde' then assert(not ns.SetChoice('cooking',g.id,o.id)); found=true end
-            end end
-            assert(found)
+            local group,option=ns.FindChoice('blacksmithing','bronze','warhammer')
+            option.faction='Horde'
+            assert(not ns.SetChoice('blacksmithing',group.id,option.id))
             ns.db.choices.invalid={bad='bad'}; ns.db.choices.alchemy={['finish']='mana',bad='bad'}
             ns.db.exports={alchemy={['bad']='bad',[2447]=-1,[3371]=42}}
             ns.db=nil; ns.LoadSettings()
@@ -844,28 +842,28 @@ class AddonTests(unittest.TestCase):
     def test_prepared_heavy_hides_follow_refreshed_route_and_refresh(self):
         self.check('''ns.Command('show')
             skills={{skillID=165,name='Leatherworking',rank=164,maxRank=225}}
-            owned={[4236]=11,[4235]=11,[4234]=68,[2321]=2}
+            owned={[4236]=6,[4235]=11,[4234]=68,[2321]=2}
             ns.Refresh(); ns.SetTarget(195); ns.Render()
             local mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
-            assert(mats['Heavy Hide']==10 and mats.Salt==30 and mats['Heavy Leather']==88)
+            assert(mats['Heavy Hide']==5 and mats.Salt==15 and mats['Heavy Leather']==188)
             assert(mats['Thick Leather']==55)
             local cured=ns.plan.prepared[1]
-            assert(cured.name=='Cured Heavy Hide' and cured.used==11 and cured.missing==10)
-            assert(ns.preparedText:IsShown() and ns.preparedText:GetText():find('use 11 from bags'))
+            assert(cured.name=='Cured Heavy Hide' and cured.used==6 and cured.missing==5)
+            assert(ns.preparedText:IsShown() and ns.preparedText:GetText():find('use 6 from bags'))
             owned[4236]=37; Fire('BAG_UPDATE_DELAYED'); Tick()
             mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
             assert(mats['Heavy Hide']==nil and mats.Salt==nil)
-            assert(ns.plan.prepared[1].used==21 and ns.plan.prepared[1].missing==0)
+            assert(ns.plan.prepared[1].used==11 and ns.plan.prepared[1].missing==0)
             assert(ns.preparedText:GetText():find('still need 0'))
             ns.clearButton:GetScript('OnClick')(); assert(not ns.preparedText:IsShown())''')
 
     def test_raw_and_cured_hides_are_distinct_and_bank_is_not_credited(self):
         self.check('''skills={{skillID=165,name='Leatherworking',rank=164,maxRank=225}}
             owned={[4235]=100}; ns.Refresh(); ns.SetTarget(195); ns.Render()
-            assert(ns.plan.prepared[1].used==0 and ns.plan.prepared[1].missing==21)
+            assert(ns.plan.prepared[1].used==0 and ns.plan.prepared[1].missing==11)
             local mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m end
-            assert(mats['Heavy Hide'].quantity==21 and mats['Heavy Hide'].owned==100)
-            assert(mats.Salt.quantity==63)
+            assert(mats['Heavy Hide'].quantity==11 and mats['Heavy Hide'].owned==100)
+            assert(mats.Salt.quantity==33)
             bankQueries=0
             C_Item.GetItemCount=function(id,includeBank)
                 if includeBank then bankQueries=bankQueries+1; return 999 end
@@ -888,14 +886,14 @@ class AddonTests(unittest.TestCase):
             assert(mats['Linen Cloth']==nil)''')
 
     def test_current_source_routes_and_oil_yield(self):
-        self.check('''assert(ns.SourceDate=='2026-11-18')
+        self.check('''assert(ns.SourceDate=='2026-11-23')
             skills={{skillID=171,name='Alchemy',rank=250,maxRank=300}}; ns.Refresh()
             ns.SetTarget(300); ns.Render()
             assert(ns.plan.steps[1].recipes[1].name=='Stonescale Oil')
             assert(ns.plan.steps[1].recipes[1].crafts==47)
             local mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
             assert(mats['Stonescale Eel']==47 and mats['Leaded Vial']==47 and mats['Stonescale Oil']==nil)
-            assert(mats.Blindweed==10 and mats['Crystal Vial']==57)
+            assert(mats.Blindweed==10 and mats['Crystal Vial']==54)
             ns.SetChoice('alchemy','finish','mana'); ns.Render()
             mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
             assert(mats['Stonescale Eel']==nil and mats['Leaded Vial']==nil)
@@ -905,26 +903,50 @@ class AddonTests(unittest.TestCase):
     def test_refreshed_cooking_enchanting_and_pattern_requirements(self):
         self.check('''skills={{skillID=185,name='Cooking',rank=225,maxRank=300}}; ns.Refresh()
             ns.SetTarget(300); ns.Render()
-            assert(#ns.plan.steps==1 and ns.plan.steps[1].recipes[1].crafts==140)
+            assert(#ns.plan.steps==2 and ns.plan.steps[1].recipes[1].crafts==72)
+            assert(ns.plan.steps[2].from==285 and ns.plan.steps[2].recipes[1].name=='Nightfin Soup'
+                and ns.plan.steps[2].recipes[1].crafts==18)
             skills={{skillID=333,name='Enchanting',rank=265,maxRank=300}}; ns.Refresh()
             ns.SetTarget(300); ns.Render()
-            assert(ns.plan.steps[1].to==299 and ns.plan.steps[1].recipes[1].crafts==40)
-            assert(ns.plan.steps[2].recipes[1].name=='Runed Arcanite Rod')
+            assert(ns.plan.steps[3].from==275 and ns.plan.steps[3].recipes[1].name=='Wizard Oil'
+                and ns.plan.steps[3].recipes[1].crafts==26)
+            assert(ns.plan.steps[#ns.plan.steps].recipes[1].name=='Runed Arcanite Rod')
             skills={{skillID=197,name='Tailoring',rank=280,maxRank=300}}; ns.Refresh()
             ns.SetTarget(300); ns.Render()
             assert(ns.plan.steps[1].recipes[1].name=='Runecloth Shoulders')
             assert(ns.plan.steps[1].recipes[1].crafts==58)
             assert(ns.warningText:GetText():find('rare') or ns.warningText:GetText():find('world%-drop'))
             skills={{skillID=129,name='First Aid',rank=275,maxRank=300}}; ns.Refresh()
-            ns.SetTarget(300); ns.Render(); assert(ns.warningText:GetText():find('Pexmit'))''')
+            ns.SetTarget(300); ns.Render()
+            assert(ns.plan.steps[1].recipes[1].name=='Runecloth Bandage')
+            assert(ns.SetChoice('first-aid','artisan','potions')); ns.Render()
+            assert(ns.plan.steps[1].recipes[1].name=='Major Healing Potion')
+            assert(ns.warningText:GetText():find('Pexmit'))''')
+
+    def test_blacksmithing_125_routes_plan_the_correct_materials(self):
+        self.check('''skills={{skillID=164,name='Blacksmithing',rank=125,maxRank=150}}; ns.Refresh()
+            local function plan(choice)
+                local result=ns.Plan('blacksmithing',ns.player,140,{bronze=choice})
+                local materials={}
+                for _,item in ipairs(result.materials) do materials[item.name]=item.quantity end
+                return result.steps[1].recipes[1],materials
+            end
+            local recipe,materials=plan('default')
+            assert(recipe.name=='Silvered Bronze Gauntlets' and recipe.crafts==15)
+            assert(materials['Bronze Bar']==120 and materials['Silver Bar']==15 and materials['Coarse Stone']==60)
+            recipe,materials=plan('warhammer')
+            assert(recipe.name=='Bronze Warhammer' and recipe.crafts==15)
+            assert(materials['Bronze Bar']==120 and materials['Strong Flux']==15 and materials['Medium Leather']==15)
+            assert(materials['Coarse Stone']==nil and materials['Silver Bar']==nil)''')
 
     def test_source_refresh_retires_only_removed_saved_choices(self):
         self.check('''ns.db.choices={leatherworking={['heavy-hides']='leather'},
-                blacksmithing={imperial='ebon'},alchemy={['finish']='mana'}}
+                blacksmithing={imperial='ebon',bronze='bracers'},alchemy={['finish']='mana'}}
             ns.db.sourceDate='2026-11-12'; ns.db.targets.alchemy=300
             ns.db.exports.alchemy={[3371]=42}; ns.db=nil; ns.LoadSettings()
             assert(ns.db.choices.leatherworking['heavy-hides']==nil)
             assert(ns.db.choices.blacksmithing.imperial==nil)
+            assert(ns.db.choices.blacksmithing.bronze==nil)
             assert(ns.db.choices.alchemy['finish']=='mana')
             assert(ns.db.targets.alchemy==300 and ns.db.exports.alchemy[3371]==42)
             assert(ns.db.sourceDate==ns.SourceDate and ns.status:find('Retired'))''')
@@ -932,9 +954,9 @@ class AddonTests(unittest.TestCase):
     def test_november17_enchanting_wand_and_dust_routes(self):
         self.check('''skills={{skillID=333,name='Enchanting',rank=70,maxRank=150}}; ns.Refresh()
             ns.SetTarget(100); ns.Render()
-            assert(ns.plan.steps[1].to==85 and ns.plan.steps[1].recipes[1].crafts==23)
+            assert(ns.plan.steps[1].to==85 and ns.plan.steps[1].recipes[1].crafts==21)
             assert(ns.plan.steps[2].from==85 and ns.plan.steps[2].recipes[1].crafts==15)
-            assert(ns.plan.materials[1].name=='Strange Dust' and ns.plan.materials[1].quantity==53)
+            assert(ns.plan.materials[1].name=='Strange Dust' and ns.plan.materials[1].quantity==51)
             skills[1].rank=110; ns.Refresh(); ns.SetTarget(150); ns.Render()
             ns.SetChoice('enchanting','early-path','essence'); ns.Render()
             assert(ns.plan.steps[1].recipes[1].name=='Greater Magic Wand')
@@ -949,8 +971,8 @@ class AddonTests(unittest.TestCase):
     def test_linked_spurs_and_conflicting_alternates_are_exclusive(self):
         self.check('''skills={{skillID=164,name='Blacksmithing',rank=215,maxRank=300}}; level=60; ns.Refresh()
             ns.SetTarget(270); ns.Render(); assert(ns.SetChoice('blacksmithing','spurs','spurs')); ns.Render()
-            assert(ns.plan.steps[3].from==230 and ns.plan.steps[3].to==245)
-            assert(ns.plan.steps[3].recipes[1].crafts==33)
+            assert(ns.plan.steps[3].from==235 and ns.plan.steps[3].to==245)
+            assert(ns.plan.steps[3].recipes[1].crafts==28)
             assert(ns.GroupForStep('blacksmithing',ns.plan.steps[3]).id=='spurs')
             local before=ns.ActiveChoices('blacksmithing').spurs
             local group,option=ns.FindChoice('blacksmithing','imperial','rapier')
@@ -988,7 +1010,7 @@ class AddonTests(unittest.TestCase):
             skills={{skillID=202,name='Engineering',rank=1,maxRank=150}}; ns.Refresh()
             ns.SetTarget(75); ns.Render()
             mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
-            assert(mats['Rough Stone']==66 and mats['Copper Bar']==72 and mats['Linen Cloth']==33)
+            assert(mats['Rough Stone']==52 and mats['Copper Bar']==58 and mats['Linen Cloth']==26)
             assert(mats['Rough Blasting Powder']==nil and mats['Handful of Copper Bolts']==nil)
             skills[1].rank=250; ns.Refresh(); ns.SetTarget(260); ns.Render()
             assert(ns.plan.steps[1].recipes[1].crafts==44 and ns.plan.materials[1].quantity==88)''')
@@ -1006,7 +1028,7 @@ class AddonTests(unittest.TestCase):
             assert(mats['Spider Ichor']==54 and mats['Bottle of Dalaran Noir']==54)
             assert(mats.Bruiseweed==31 and mats['Hot Spices']==31 and mats['Wool Cloth']==nil)
             ns.SetChoice('first-aid','journeyman','default'); ns.Render()
-            assert(ns.plan.steps[1].recipes[1].crafts==43 and ns.plan.steps[2].recipes[1].crafts==54)''')
+            assert(ns.plan.steps[1].recipes[1].crafts==40 and ns.plan.steps[2].recipes[1].crafts==51)''')
 
     def test_imperial_unlock_and_early_leather_alternate(self):
         self.check('''skills={{skillID=164,name='Blacksmithing',rank=240,maxRank=300}}; ns.Refresh()
@@ -1018,7 +1040,19 @@ class AddonTests(unittest.TestCase):
             assert(ns.plan.steps[1].recipes[1].name=='Light Armor Kit')
             assert(ns.plan.steps[2].recipes[1].name=='Embossed Leather Gloves')
             local mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
-            assert(mats['Light Hide']==24 and mats.Salt>=24)
-            assert(ns.warningText:GetText():find('still need 24'))''')
+            assert(mats['Light Hide']==10 and mats.Salt>=10)
+            assert(ns.warningText:GetText():find('still need 10'))''')
+
+    def test_blacksmithing_finishing_routes_and_recipe_quest_cost(self):
+        self.check('''skills={{skillID=164,name='Blacksmithing',rank=245,maxRank=300}}; level=60; ns.Refresh()
+            local function finish(choice)
+                local plan=ns.Plan('blacksmithing',ns.player,300,{finish=choice})
+                for _,item in ipairs(plan.materials) do
+                    if item.name=='Thorium Bar' then return plan.steps[2].recipes[1].name,item.quantity end
+                end
+            end
+            local name,bars=finish('default'); assert(name=='Radiant Boots' and bars==1068)
+            name,bars=finish('thorium'); assert(name=='Imperial Plate Bracers' and bars==1482)
+            name,bars=finish('imperial'); assert(name=='Imperial Plate Boots' and bars==1780)''')
 
 if __name__=='__main__': unittest.main(verbosity=2)

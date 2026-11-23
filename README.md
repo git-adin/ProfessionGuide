@@ -1,4 +1,4 @@
-# ProfessionGuide 0.5.1
+# ProfessionGuide 0.5.2
 
 An independent WoW Forever addon (Interface 16001) with character-aware profession
 routes and optional, explicit exports to ItemFarmingTool. No addon dependency,
@@ -102,8 +102,8 @@ All guide and planning features work with none of these addons installed.
 
 ## Recipe alternatives
 
-The November 18 refresh includes **39 alternates in 25 choice groups** across the crafting
-professions, Cooking and First Aid. The selector appears only for affected steps.
+The crafting professions, Cooking and First Aid offer recipe alternatives.
+The selector appears only for affected steps.
 Use **Compare alternatives** to expand each option's recipe source, requirements
 and ingredient changes for your full target. Counts do not compare auction prices.
 
@@ -112,7 +112,7 @@ Enchanting's dust/essence paths and high-level Leatherworking choices change as
 one choice, including later dependent steps. Enchanting now defaults consistently
 to the source's active Strange Dust path. You can restore **Guide default** in
 each selector. Different unrelated choice groups can be combined.
-The source's 215-245 Mithril Spurs path is linked. Selecting it resets a conflicting
+The source's 210–245 Mithril Spurs path is linked. Selecting it resets a conflicting
 240-270 alternate, and selecting that alternate resets Spurs, preserving one
 continuous route. The retired 130-165 Alchemy mana alternate is no longer offered.
 
@@ -130,7 +130,7 @@ ItemFarmingTool automatically.
 ## Estimates and limitations
 
 The bundled factual route snapshot comes from [WoW-Professions.com's Forever
-guides](https://www.wow-professions.com/forever), refreshed November 18, 2026.
+guides](https://www.wow-professions.com/forever), refreshed November 23, 2026.
 Instructions are condensed and rewritten; this is not the full website, its maps,
 or every informal recipe suggestion. See [SOURCES.md](SOURCES.md).
 

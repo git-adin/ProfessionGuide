@@ -59,8 +59,9 @@ route("herbalism", {
 })
 route("skinning", {
     {1,75,"Skin starter beasts. Keep a Skinning Knife in your bags.","Northshire Valley", "Valley of Trials"},
-    {75,150,"Skin beasts appropriate to your skill: level 16-17 until 80, then level 18.","Loch Modan, then Wetlands at 125", "The Barrens"},
-    {150,225,"Skin yetis or worgen. For beasts level 20+, required skill is five times their level.","Hillsbrad Foothills or Duskwood", "Hillsbrad Foothills or Duskwood"},
+    {75,150,"Skin beasts appropriate to your skill: level 16-17 until 80, then level 18.","Loch Modan, then Wetlands at 130", "The Barrens"},
+    {150,160,"In Hillsbrad, skin bears and mountain lions outside Foothill Caverns before moving to higher-level yetis.","Hillsbrad Foothills", "Hillsbrad Foothills"},
+    {160,225,"Skin yetis or worgen. For beasts level 20+, required skill is five times their level.","Hillsbrad Foothills or Duskwood", "Hillsbrad Foothills or Duskwood"},
     {225,280,"Skin the yetis around Feral Scar Vale (beast levels 43-46).", "Feralas", "Feralas"},
     {280,300,"Skin dinosaurs (beast levels 50-55).", "Western Un'Goro Crater", "Western Un'Goro Crater"},
 })
@@ -68,13 +69,13 @@ route("fishing", {
     {1,75,"Equip a Fishing Pole, apply a lure, and fish in a starting zone rather than a capital."},
     {75,150,"Learn Journeyman, then fish in a capital city. Use Nightcrawlers if needed."},
     {150,225,"Expert book: Old Man Heming, Booty Bay (skill 125, level 20). Fish in Dustwallow Marsh with Bright Baubles."},
-    {225,300,"Artisan: Nat Pagle's Angler Extreme quest in Dustwallow Marsh (skill 225, level 35). Then fish in Feralas, Tanaris or The Hinterlands with lures."},
+    {225,300,"Artisan: Nat Pagle's Angler Extreme (skill 225, level 35), starts in Dustwallow Marsh. Catch Savage Coast Blue Sailfin on western Stranglethorn's coast, Sar'theris Striker on the Desolace coast, Misty Reed Mahi Mahi along Misty Reed Strand in Swamp of Sorrows, and Feralas Ahi in the Verdantis River west of the road bridge. Use Bright Baubles in Feralas. Then fish in Feralas, Tanaris or The Hinterlands with lures."},
 })
 route("lockpicking", {
     {1,100,"Practice on quickly respawning boxes.","Practice Lockboxes, north of Lake Everstill in Redridge", "Buccaneer's Strongboxes inside the ship near Ratchet"},
-    {100,150,"Open Waterlogged Footlockers.","Zoram Strand, Ashenvale", "Zoram Strand, Ashenvale"},
+    {100,150,"Open Waterlogged Footlockers on shore. At 110, you can also open the higher-level ones underwater.","Zoram Strand, Ashenvale", "Zoram Strand, Ashenvale"},
     {150,225,"Open upstairs footlockers at 150, then downstairs ones at 175. Source reports the downstairs locks give reliable points until 215 and can be used to 225.","Angor Fortress, Badlands", "Angor Fortress, Badlands"},
-    {225,300,"Open Dented Footlockers in the Slag Pit. Lower locks need 200; upper locks need 225. Stay with the upper locks after lower ones stop giving points. Source reports upper locks remain yellow to 290, then green through 300. Mob junkboxes are too low for useful skill-ups.","The Slag Pit, Searing Gorge", "The Slag Pit, Searing Gorge"},
+    {225,300,"Open Dented Footlockers in the Slag Pit. Lower locks need 200; upper locks need 225. Stay with the upper locks after lower ones stop giving points. Source reports upper locks remain yellow to 290, then green through 300. If the Slag Pit is crowded, open Dented Footlockers at Lost Rigger Cove instead.","The Slag Pit or Lost Rigger Cove", "The Slag Pit or Lost Rigger Cove"},
 })
 
 -- Rank thresholds are not necessarily route boundaries.
