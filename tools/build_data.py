@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 ROOT = Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--cache-dir',type=Path,default=ROOT/'tools/.source-cache')
-parser.add_argument('--source-date',default='2026-11-18')
+parser.add_argument('--source-date',default='2026-11-23')
 args=parser.parse_args()
 SLUGS = ['alchemy','blacksmithing','enchanting','engineering','leatherworking','tailoring','first-aid','cooking']
 items, spells, recipe_icons = {}, {}, {}
@@ -42,8 +42,8 @@ for slug in SLUGS:
 items.update({'Coarse Thread':2320,'Fine Thread':2321,'Silken Thread':4291,
     'Heavy Silken Thread':8343,'Rune Thread':14341,'Red Dye':2604,'Blue Dye':6260,
     'Green Dye':2605,'Black Dye':2325,'Salt':4289,'Refreshing Spring Water':159,
-    'Hot Spices':2692,'Soothing Spices':3713,'Mild Spices':2678,
-    'Bolt of Linen Cloth':2996,'Bronze Framework':4382,'Bronze Tube':4371,
+    'Golden Sansam':13464,'Hot Spices':2692,'Soothing Spices':3713,'Mild Spices':2678,
+    'Bolt of Linen Cloth':2996,'Bolt of Woolen Cloth':2997,'Bronze Framework':4382,'Bronze Tube':4371,
     'Coarse Blasting Powder':4364,'Coarse Grinding Stone':3478,'Cured Medium Hide':4233,
     'Fine Leather Belt':4246,'Fire Oil':6371,'Gray Dye':4340,'Handful of Copper Bolts':4359,
     'Heavy Blasting Powder':4377,'Heavy Grinding Stone':3486,'Mithril Casing':10561,
@@ -81,6 +81,18 @@ for slug,soup in soups.items():
                         for c in li.contents if getattr(c,'name',None) not in ['p','ul','ol','details'])
         direct=li.get('data-primary',direct)
         r=recipe(' '.join(direct.split()))
+        if not r and slug=='blacksmithing' and (lo,hi)==(270,300):
+            table=li.find('table')
+            if table:
+                for row in table.select('tbody tr'):
+                    skill, craft, materials, *_=row.find_all('td',recursive=False)
+                    start,stop=map(int,skill.get_text(strip=True).split('-'))
+                    entry=recipe(craft.get_text(' ',strip=True)+' - '+materials.get_text(' ',strip=True))
+                    if not entry: raise ValueError((slug,start,'No recipe'))
+                    steps.append({'from':start,'to':stop,'recipes':[entry]})
+                    seen.add((start,stop))
+                seen.add((lo,hi))
+                continue
         if r is None:
             # Nested choices: choose one, except Engineering 135-150 needs both.
             nested=li.find(['ul','ol'])
@@ -134,6 +146,17 @@ for slug,soup in soups.items():
                 r=recipe(food+' - '+mat)
                 if r and (lo,hi) not in seen:
                     steps.append({'from':lo,'to':hi,'recipes':[r]}); seen.add((lo,hi))
+    if slug == 'cooking':
+        # Cooking also uses standalone recipe steps for ranges without a table.
+        for node in soup.select('li.route-step[data-primary]'):
+            match = re.fullmatch(r'(\d+)-(\d+)', node.find('b', recursive=False).get_text(strip=True))
+            if match:
+                lo, hi = map(int, match.groups())
+                if (lo, hi) not in seen:
+                    steps.append({'from': lo, 'to': hi, 'recipes': [recipe(node['data-primary'])]})
+                    seen.add((lo, hi))
+        steps.sort(key=lambda step: step['from'])
+
     # Exclude overlapping alternative tabs by following the first continuous route.
     selected=[]; end=1
     for step in steps:
@@ -150,13 +173,14 @@ for slug,soup in soups.items():
 from alternate_routes import build as build_alternates
 alternates=build_alternates(guides,soups,recipe,items)
 reviewed_notes={
+    ('blacksmithing',125):'Silvered Bronze Gauntlets require 30 Coarse Grinding Stones. Use any you have left or make the rest before crafting the gauntlets.',
+    ('blacksmithing',270):'Radiant Boots and Radiant Leggings require world-drop plans. Compare the other finishing routes if the plans are unavailable or expensive.',
     ('engineering',260):'Buy Schematic: Thorium Widget from Sovik (Orgrimmar) or Gearcutter Cogspinner (Ironforge).',
-    ('engineering',285):'Buy the bind-on-pickup Thorium Tube schematic from Xizzer Fizzbolt in Everlook, Winterspring, on this character.',
+    ('engineering',280):'Buy the bind-on-pickup Thorium Tube schematic from Xizzer Fizzbolt in Everlook, Winterspring, on this character.',
     ('tailoring',200):'These shoulders require an Artisan trainer; the Expert trainers do not teach them.',
     ('tailoring',240):'Runecloth Gloves pattern: Qia, Winterspring.',
     ('tailoring',250):'Runecloth Cuffs pattern: Pexmit, Mount Hyjal (bind on pickup). Optional Horde quest source: Threading a Solution from Kal\'tinzan, Elderwild, Mount Hyjal; level 54 and 6 Bolt of Runecloth. Quest skill requirement is unverified.',
     ('tailoring',280):'Requires the world-drop Runecloth Shoulders pattern. Check availability before buying. Wizardweave Turban is an alternate; Loom recipes require another tailor\'s Loom and Cenarion Circle reputation (see source).',
-    ('first-aid',275):'Major Healing Potion manual: Pexmit in Mount Hyjal for 8 gold, or check the Auction House. Horde quest: A Rest Without Pain from Ortak Lomgok in Elderwild; first complete Herbs for the Bruised and Weary.',
 }
 for slug,guide in guides.items():
     for step in guide['steps']:

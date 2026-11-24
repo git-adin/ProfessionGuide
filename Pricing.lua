@@ -8,7 +8,7 @@ end
 
 local function auctionatorAPI() return Auctionator and Auctionator.API and Auctionator.API.v1 end
 local providers={
-    {name="AuctionPriceLite",lowLabel="AH low",averageLabel="Scan average",
+    {name="AuctionPriceLite",lowLabel="AH low (estimate)",quantityPricing=true,
         available=function() return AuctionPriceLite and type(AuctionPriceLite.GetItemPrice)=="function" end,
         quote=function(id) return AuctionPriceLite.GetItemPrice(id) end,
         scanTime=function() return ns.Safe(AuctionPriceLite.GetScanTime) end},
@@ -50,10 +50,41 @@ local function quoteRecipe(recipe,provider)
     return cost
 end
 
-function ns.CraftCost(recipe)
+local function stockRecipe(recipe,crafts,provider)
+    local cost={low=0,stepLow=crafts and 0 or nil,missingLow={},missingStep={},missingAverage={},
+        shortages={},source=provider.name,lowLabel="Scanned buyouts",stockVerified=true,
+        scannedAt=ns.Safe(provider.scanTime)}
+    local function add(material,quantity,scope)
+        local id=ns.ItemIDs[material.name]
+        local amount,found
+        if id then amount,found=ns.Safe(AuctionPriceLite.GetItemCost,id,quantity) end
+        amount=validPrice(amount)
+        local missing=scope=="craft" and cost.missingLow or cost.missingStep
+        if amount and type(found)=="number" and found>=quantity then return amount end
+        missing[#missing+1]=material.name
+        if (not crafts or scope=="step") and type(found)=="number" and found>=0 and found<quantity then
+            cost.shortages[material.name]={found=found,needed=quantity}
+        end
+        return 0
+    end
+    for _,material in ipairs(recipe.materials or {}) do
+        cost.low=cost.low+add(material,material.quantity,"craft")
+        if crafts then cost.stepLow=cost.stepLow+add(material,material.quantity*crafts,"step") end
+    end
+    return cost
+end
+
+function ns.CraftCost(recipe,crafts)
     local best
     for _,provider in ipairs(providers) do
         if provider.available() then
+            if provider.quantityPricing then
+                local _,_,hasStock=ns.Safe(AuctionPriceLite.GetScanTime)
+                if hasStock and type(AuctionPriceLite.GetItemCost)=="function" then
+                    -- A known stock shortage must not fall back to an unverified unit quote.
+                    return stockRecipe(recipe,crafts,provider)
+                end
+            end
             local cost=quoteRecipe(recipe,provider)
             -- Use one provider for the entire recipe; prefer greater coverage.
             if not best or cost.coverage>best.coverage then best=cost end
@@ -73,17 +104,19 @@ function ns.FormatCost(copper)
 end
 
 function ns.CraftCostText(recipe,crafts)
-    local cost=ns.CraftCost(recipe)
+    local cost=ns.CraftCost(recipe,crafts)
     if not cost then return "Craft cost: optional pricing addon not loaded (AuctionPriceLite, Auctionator, TradeSkillMaster or Auctioneer)." end
     local lines={}
-    local function quote(label,value,missing)
+    local function quote(label,value,missing,step,missingStep)
         if #missing>0 then
             return label..": incomplete (missing "..table.concat(missing,", ")..")."
         end
+        local total=cost.stockVerified and step or value*(crafts or 1)
         return label..": "..ns.FormatCost(value).." per craft"
-            ..(crafts and ("; about "..ns.FormatCost(value*crafts).." for "..crafts.." crafts") or "").."."
+            ..(crafts and ((missingStep and #missingStep>0) and "; step stock incomplete"
+                or ("; about "..ns.FormatCost(total).." for "..crafts.." crafts")) or "").."."
     end
-    if cost.lowLabel then lines[#lines+1]=quote("Craft cost, "..cost.lowLabel,cost.low,cost.missingLow) end
+    if cost.lowLabel then lines[#lines+1]=quote("Craft cost, "..cost.lowLabel,cost.low,cost.missingLow,cost.stepLow,cost.missingStep) end
     if cost.averageLabel then
         lines[#lines+1]=quote(cost.averageLabel,cost.average,cost.missingAverage)
     end

@@ -1,4 +1,4 @@
-# ProfessionGuide 0.5.1
+# ProfessionGuide 0.5.4
 
 An independent WoW Forever addon (Interface 16001) with character-aware profession
 routes and optional, explicit exports to ItemFarmingTool. No addon dependency,
@@ -64,8 +64,9 @@ generic logo for legacy recipe spell IDs.
 
 ## Training & trainer pins
 
-Training & notes separates rank requirements, trainers/books, profession notes,
-planning help and source information. Faction-specific trainers and tips follow
+Training & notes opens with your next rank and a specific readiness message,
+followed by compact trainer cards. **All ranks & guide help** expands the rank
+reference and planning help; it stays collapsed by default. Faction-specific trainers and tips follow
 the detected Horde or Alliance faction; neutral contacts remain visible. If the
 faction is unknown, only neutral contacts appear.
 
@@ -84,17 +85,26 @@ limitations and details about owned supplies. The card footer names the provider
 scan time when available, and planned craft count. Missing prices are explicit,
 and step totals stay blank until a target is planned.
 
-Pricing addons are optional. Supported public APIs: AuctionPriceLite (minimum
-buyout and full-scan average), Auctionator v1 (last scanned buyout),
+Pricing addons are optional. Supported public APIs: AuctionPriceLite (scanned
+quantity costs, with minimum-buyout estimates for older scans), Auctionator v1 (last scanned buyout),
 TradeSkillMaster (`DBMinBuyout` and `DBMarket`), and Auctioneer Advanced
 (`AucAdvanced.API.GetMarketValue`). Each recipe shows its material cost per craft
 and the estimated total for its remaining crafts when a target is planned.
 Recipes producing multiple items say how many they make.
 Materials already owned are included. Vendor reagents and prepared materials need
 their own saved prices; missing quotes are labeled incomplete, never priced as
-zero. Each recipe uses one provider, choosing the best ingredient coverage;
+zero. With AuctionPriceLite stock data, **Scanned buyouts** uses the cheapest
+listings needed to fill each material quantity, matching WritCrateLite. The step
+total is quoted separately for the entire step; it is not one-craft cost multiplied
+by craft count. **Stock short** replaces totals that the saved scan cannot fill;
+hover to see quantities found and required. Broad averages across all listings
+are no longer shown for AuctionPriceLite. Older scans show **Stock unverified**;
+run a new full Scan Prices to enable quantity-aware costs. Known scanned shortages
+do not fall back to another provider's unverified unit price.
+
+Without AuctionPriceLite stock data, each recipe uses one provider, choosing the best ingredient coverage;
 ties prefer AuctionPriceLite, Auctionator, TradeSkillMaster, then Auctioneer.
-Buyouts, scan averages and market values have separate labels. The provider and
+Buyout estimates and market values have separate labels. The provider and
 scan time (when available) are shown. AuctionPriceLite scan/lookup updates refresh
 automatically; all providers refresh when the AH closes or you click Refresh.
 Populate/update prices using your auction addon's normal scan or data update.
@@ -102,8 +112,8 @@ All guide and planning features work with none of these addons installed.
 
 ## Recipe alternatives
 
-The November 18 refresh includes **39 alternates in 25 choice groups** across the crafting
-professions, Cooking and First Aid. The selector appears only for affected steps.
+The crafting professions, Cooking and First Aid offer recipe alternatives.
+The selector appears only for affected steps.
 Use **Compare alternatives** to expand each option's recipe source, requirements
 and ingredient changes for your full target. Counts do not compare auction prices.
 
@@ -112,7 +122,7 @@ Enchanting's dust/essence paths and high-level Leatherworking choices change as
 one choice, including later dependent steps. Enchanting now defaults consistently
 to the source's active Strange Dust path. You can restore **Guide default** in
 each selector. Different unrelated choice groups can be combined.
-The source's 215-245 Mithril Spurs path is linked. Selecting it resets a conflicting
+The source's 210–245 Mithril Spurs path is linked. Selecting it resets a conflicting
 240-270 alternate, and selecting that alternate resets Spurs, preserving one
 continuous route. The retired 130-165 Alchemy mana alternate is no longer offered.
 
@@ -130,7 +140,7 @@ ItemFarmingTool automatically.
 ## Estimates and limitations
 
 The bundled factual route snapshot comes from [WoW-Professions.com's Forever
-guides](https://www.wow-professions.com/forever), refreshed November 18, 2026.
+guides](https://www.wow-professions.com/forever), refreshed November 23, 2026.
 Instructions are condensed and rewritten; this is not the full website, its maps,
 or every informal recipe suggestion. See [SOURCES.md](SOURCES.md).
 

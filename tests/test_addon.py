@@ -102,7 +102,7 @@ class AddonTests(unittest.TestCase):
 
     def test_plan_route_favorites_only_learned_chosen_recipes(self):
         self.check('''skills={{skillID=164,name='Blacksmithing',rank=130,maxRank=150}}; ns.Refresh()
-            ns.SetChoice('blacksmithing','bronze','bracers')
+            ns.SetChoice('blacksmithing','bronze','warhammer')
             favorites={}; writes={}; infos={}
             Professions={InLocalCraftingMode=function() return true end}
             C_TradeSkillUI={GetBaseProfessionInfo=function() return {professionID=164} end,
@@ -111,13 +111,13 @@ class AddonTests(unittest.TestCase):
                 SetRecipeFavorite=function(id,value) assert(value==true); writes[#writes+1]=id; favorites[id]=value end}
             ns.SetTarget(150); ns.Render()
             local id=ns.plan.steps[1].recipes[1].spell
-            assert(id==2672)
+            assert(id==9985)
             infos[id]={recipeID=id,learned=true}
             local other=ns.plan.steps[2].recipes[1].spell
             infos[other]={recipeID=other,learned=false}
             assert(#writes==0)
             ns.targetInput:SetText('150'); ns.applyButton.scripts.OnClick()
-            assert(#writes==1 and writes[1]==2672)
+            assert(#writes==1 and writes[1]==9985)
             assert(ns.status:find('1 added') and ns.status:find('1 unlearned'))
             ns.applyButton.scripts.OnClick(); assert(#writes==1)
             assert(ns.status:find('1 already starred'))
@@ -219,12 +219,20 @@ class AddonTests(unittest.TestCase):
         self.lua.execute(source.read_text(encoding='utf-8'),'AuctionPriceLite',self.lua.table())
         self.check('''Fire('ADDON_LOADED','AuctionPriceLite'); Fire('PLAYER_ENTERING_WORLD')
             local c=ns.CraftCost({materials={{name='Bronze Bar',quantity=5},{name='Coarse Grinding Stone',quantity=2}}})
-            assert(c.source=='AuctionPriceLite' and c.low==555 and c.average==830 and c.scannedAt==10000)''')
+            assert(c.source=='AuctionPriceLite' and c.low==555 and c.average==830 and c.scannedAt==10000)
+            assert(c.averageLabel==nil)
+            AuctionPriceLiteDB.snapshots['1:15:Alliance'].stock={
+                [2841]={{101,5},{200,10}},[3478]={{25,100}}}
+            c=ns.CraftCost({materials={{name='Bronze Bar',quantity=5},{name='Coarse Grinding Stone',quantity=2}}},3)
+            assert(c.stockVerified and c.low==555 and c.stepLow==2655)
+            AuctionPriceLiteDB.snapshots['1:15:Alliance'].stock[2841]={{101,5}}
+            c=ns.CraftCost({materials={{name='Bronze Bar',quantity=5}}},3)
+            assert(c.shortages['Bronze Bar'].found==5 and c.shortages['Bronze Bar'].needed==15)''')
 
     def test_training_notes_filter_faction_and_hide_rows(self):
         self.check('''skills={{skillID=164,name='Blacksmithing',rank=131,maxRank=150}}; ns.Refresh()
             ns.player.faction='Horde'; ns.showNotes=true; ns.Render()
-            assert(ns.trainingHeader:GetText():find('Horde') and ns.trainingHeader:GetText():find('Ready to train'))
+            assert(ns.trainingHeader:GetText():find('Horde') and ns.trainingNext.detail:GetText():find('Ready to train'))
             assert(ns.trainingRows[1].label:GetText():find('Saru Steelfury'))
             assert(not ns.trainingRows[1].label:GetText():find('Bengus'))
             assert(ns.trainingRows[2].label:GetText():find('Brikk'))
@@ -232,7 +240,7 @@ class AddonTests(unittest.TestCase):
             ns.player.faction='Alliance'; ns.Render()
             assert(ns.trainingRows[1].label:GetText():find('Bengus'))
             ns.player.faction=nil; ns.Render()
-            assert(ns.trainingHeader:GetText():find('Only neutral'))
+            assert(ns.trainingDirectory:GetText():find('Only neutral'))
             assert(ns.trainingRows[1].label:GetText():find('Brikk'))
             assert(not ns.trainingRows[3]:IsShown())
             ns.showNotes=false; ns.Render()
@@ -308,7 +316,8 @@ class AddonTests(unittest.TestCase):
             assert(card:IsShown() and card.each:GetText()=='Each craft' and card.total:GetText()=='This step')
             assert(card.rows[1].each:GetText()=='18s 0c')
             assert(card.rows[1].total:GetText():find('4g 32s 0c'))
-            assert(card.rows[2].total:GetText():find('8g 64s 0c'))
+            assert(not card.rows[2].total:IsShown())
+            assert(card.footer:GetText():find('Stock unverified'))
             assert(not ns.detailText:GetText():find('AuctionPriceLite'))
             assert(card.helpRows[3][1]=='Owned materials' and card.helpRows[3][2]=='Included in value')
             assert(ns.tableHead[2].title=='In bags' and ns.tableHead[3].title=='Required' and ns.tableHead[4].title=='To get')
@@ -347,6 +356,54 @@ class AddonTests(unittest.TestCase):
             assert(body:find('Empty Vial') and not body:find('per craft; about') and #body<160)
             card:GetScript('OnLeave')(card); assert(not tooltipShown)
             card:GetScript('OnEnter')(card); assert(clears==2 and #rows==3)''')
+
+    def test_training_view_prioritizes_next_rank_and_collapses_reference(self):
+        self.check('''skills={{skillID=333,name='Enchanting',rank=45,maxRank=75}}; ns.Refresh()
+            ns.Command('show'); ns.showNotes=true; ns.Render()
+            assert(ns.trainingNext.title:GetText()=='Next rank: Journeyman')
+            assert(ns.trainingNext.detail:GetText():find('Need 5 more skill'))
+            assert(not ns.trainingReference:IsShown() and not ns.notesText:IsShown())
+            assert(ns.trainingRows[1].label:GetText():find('Kitta Firewind'))
+            ns.trainingHelpButton:GetScript('OnClick')()
+            assert(ns.trainingReference:IsShown() and ns.trainingReference:GetText():find('Artisan: skill 200'))
+            ns.trainingHelpButton:GetScript('OnClick')(); assert(not ns.trainingReference:IsShown())
+            skills[1].rank=50; ns.Refresh(); assert(ns.trainingNext.detail:GetText():find('Ready to train'))
+            skills[1].maxRank=150; ns.Refresh(); assert(ns.trainingNext.title:GetText()=='Next rank: Expert')
+            skills[1].maxRank=300; ns.Refresh(); assert(ns.trainingNext.title:GetText()=='All profession ranks trained')
+            ns.showNotes=false; ns.Render()
+            assert(not ns.trainingNext:IsShown() and not ns.trainingSource:IsShown() and not ns.trainingHelpButton:IsShown())
+            assert(next(ns.db.targets)==nil and next(ns.db.exports)==nil)''')
+
+    def test_quantity_pricing_uses_step_depth_and_reports_stock_shortages(self):
+        self.check('''local r={materials={{name='Bronze Bar',quantity=5},{name='Coarse Grinding Stone',quantity=2}}}
+            local tiers={[2841]={{10,5},{100,20}},[3478]={{20,100}}}
+            AuctionPriceLite={GetScanTime=function() return 10000,true,true end,
+                GetItemPrice=function() error('Broad scan average must not be used') end,
+                GetItemCost=function(id,quantity)
+                    local total,found=0,0
+                    for _,tier in ipairs(tiers[id] or {}) do
+                        local take=math.min(quantity-found,tier[2]); total=total+take*tier[1]; found=found+take
+                        if found==quantity then return total,found end
+                    end
+                    return nil,found
+                end}
+            local c=ns.CraftCost(r,3)
+            assert(c.stockVerified and c.low==90 and c.stepLow==1170 and not c.averageLabel)
+            assert(c.stepLow~=c.low*3)
+            ns.RenderCostCard(r,3,1,0,false)
+            local card=ns.costCards[1]
+            assert(card.rows[1].each:GetText()=='90c' and card.rows[1].total:GetText():find('11s 70c'))
+            assert(not card.rows[2].label:IsShown())
+            tiers[2841]={{10,6}}
+            c=ns.CraftCost(r,3)
+            assert(c.low==90 and #c.missingLow==0 and #c.missingStep==1)
+            assert(c.shortages['Bronze Bar'].found==6 and c.shortages['Bronze Bar'].needed==15)
+            ns.RenderCostCard(r,3,1,0,false)
+            assert(card.rows[1].each:GetText()=='90c' and card.rows[1].total:GetText():find('Stock short'))
+            assert(card.missingPrices[1]:find('6/15 scanned'))
+            assert(ns.CraftCostText(r,3):find('step stock incomplete'))
+            tiers[2841]=nil; c=ns.CraftCost(r,3)
+            assert(#c.missingLow==1 and c.shortages['Bronze Bar'].found==0)''')
 
     def test_no_target_no_plan_or_export(self):
         self.check('''assert(ns.plan==nil and next(ns.db.targets)==nil)
@@ -542,7 +599,7 @@ class AddonTests(unittest.TestCase):
     def test_workshop_notes_and_clear_target(self):
         self.check('''ns.Command('show'); ns.SetTarget(120); ns.Render()
             ns.notesButton:GetScript('OnClick')()
-            assert(ns.showNotes and ns.notesText:IsShown() and not ns.recipeText:IsShown())
+            assert(ns.showNotes and ns.trainingHeader:IsShown() and not ns.recipeText:IsShown())
             assert(ns.trainingRows[1].label:GetText():find('Ainethil'))
             ns.notesButton:GetScript('OnClick')()
             assert(not ns.showNotes and ns.recipeText:IsShown())
@@ -766,11 +823,9 @@ class AddonTests(unittest.TestCase):
             ns.SetTarget(225); assert(ns.SetChoice('tailoring','bags','belts')); ns.Render()
             assert(ns.warningText:GetText():find('level 35'))
             assert(not ns.SetChoice('alchemy','invalid','invalid'))
-            local found=false
-            for _,g in ipairs(ns.Alternates.cooking) do for _,o in ipairs(g.options) do
-                if o.faction=='Horde' then assert(not ns.SetChoice('cooking',g.id,o.id)); found=true end
-            end end
-            assert(found)
+            local group,option=ns.FindChoice('blacksmithing','bronze','warhammer')
+            option.faction='Horde'
+            assert(not ns.SetChoice('blacksmithing',group.id,option.id))
             ns.db.choices.invalid={bad='bad'}; ns.db.choices.alchemy={['finish']='mana',bad='bad'}
             ns.db.exports={alchemy={['bad']='bad',[2447]=-1,[3371]=42}}
             ns.db=nil; ns.LoadSettings()
@@ -844,28 +899,28 @@ class AddonTests(unittest.TestCase):
     def test_prepared_heavy_hides_follow_refreshed_route_and_refresh(self):
         self.check('''ns.Command('show')
             skills={{skillID=165,name='Leatherworking',rank=164,maxRank=225}}
-            owned={[4236]=11,[4235]=11,[4234]=68,[2321]=2}
+            owned={[4236]=6,[4235]=11,[4234]=68,[2321]=2}
             ns.Refresh(); ns.SetTarget(195); ns.Render()
             local mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
-            assert(mats['Heavy Hide']==10 and mats.Salt==30 and mats['Heavy Leather']==88)
+            assert(mats['Heavy Hide']==5 and mats.Salt==15 and mats['Heavy Leather']==188)
             assert(mats['Thick Leather']==55)
             local cured=ns.plan.prepared[1]
-            assert(cured.name=='Cured Heavy Hide' and cured.used==11 and cured.missing==10)
-            assert(ns.preparedText:IsShown() and ns.preparedText:GetText():find('use 11 from bags'))
+            assert(cured.name=='Cured Heavy Hide' and cured.used==6 and cured.missing==5)
+            assert(ns.preparedText:IsShown() and ns.preparedText:GetText():find('use 6 from bags'))
             owned[4236]=37; Fire('BAG_UPDATE_DELAYED'); Tick()
             mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
             assert(mats['Heavy Hide']==nil and mats.Salt==nil)
-            assert(ns.plan.prepared[1].used==21 and ns.plan.prepared[1].missing==0)
+            assert(ns.plan.prepared[1].used==11 and ns.plan.prepared[1].missing==0)
             assert(ns.preparedText:GetText():find('still need 0'))
             ns.clearButton:GetScript('OnClick')(); assert(not ns.preparedText:IsShown())''')
 
     def test_raw_and_cured_hides_are_distinct_and_bank_is_not_credited(self):
         self.check('''skills={{skillID=165,name='Leatherworking',rank=164,maxRank=225}}
             owned={[4235]=100}; ns.Refresh(); ns.SetTarget(195); ns.Render()
-            assert(ns.plan.prepared[1].used==0 and ns.plan.prepared[1].missing==21)
+            assert(ns.plan.prepared[1].used==0 and ns.plan.prepared[1].missing==11)
             local mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m end
-            assert(mats['Heavy Hide'].quantity==21 and mats['Heavy Hide'].owned==100)
-            assert(mats.Salt.quantity==63)
+            assert(mats['Heavy Hide'].quantity==11 and mats['Heavy Hide'].owned==100)
+            assert(mats.Salt.quantity==33)
             bankQueries=0
             C_Item.GetItemCount=function(id,includeBank)
                 if includeBank then bankQueries=bankQueries+1; return 999 end
@@ -888,14 +943,14 @@ class AddonTests(unittest.TestCase):
             assert(mats['Linen Cloth']==nil)''')
 
     def test_current_source_routes_and_oil_yield(self):
-        self.check('''assert(ns.SourceDate=='2026-11-18')
+        self.check('''assert(ns.SourceDate=='2026-11-23')
             skills={{skillID=171,name='Alchemy',rank=250,maxRank=300}}; ns.Refresh()
             ns.SetTarget(300); ns.Render()
             assert(ns.plan.steps[1].recipes[1].name=='Stonescale Oil')
             assert(ns.plan.steps[1].recipes[1].crafts==47)
             local mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
             assert(mats['Stonescale Eel']==47 and mats['Leaded Vial']==47 and mats['Stonescale Oil']==nil)
-            assert(mats.Blindweed==10 and mats['Crystal Vial']==57)
+            assert(mats.Blindweed==10 and mats['Crystal Vial']==54)
             ns.SetChoice('alchemy','finish','mana'); ns.Render()
             mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
             assert(mats['Stonescale Eel']==nil and mats['Leaded Vial']==nil)
@@ -905,26 +960,50 @@ class AddonTests(unittest.TestCase):
     def test_refreshed_cooking_enchanting_and_pattern_requirements(self):
         self.check('''skills={{skillID=185,name='Cooking',rank=225,maxRank=300}}; ns.Refresh()
             ns.SetTarget(300); ns.Render()
-            assert(#ns.plan.steps==1 and ns.plan.steps[1].recipes[1].crafts==140)
+            assert(#ns.plan.steps==2 and ns.plan.steps[1].recipes[1].crafts==72)
+            assert(ns.plan.steps[2].from==285 and ns.plan.steps[2].recipes[1].name=='Nightfin Soup'
+                and ns.plan.steps[2].recipes[1].crafts==18)
             skills={{skillID=333,name='Enchanting',rank=265,maxRank=300}}; ns.Refresh()
             ns.SetTarget(300); ns.Render()
-            assert(ns.plan.steps[1].to==299 and ns.plan.steps[1].recipes[1].crafts==40)
-            assert(ns.plan.steps[2].recipes[1].name=='Runed Arcanite Rod')
+            assert(ns.plan.steps[3].from==275 and ns.plan.steps[3].recipes[1].name=='Wizard Oil'
+                and ns.plan.steps[3].recipes[1].crafts==26)
+            assert(ns.plan.steps[#ns.plan.steps].recipes[1].name=='Runed Arcanite Rod')
             skills={{skillID=197,name='Tailoring',rank=280,maxRank=300}}; ns.Refresh()
             ns.SetTarget(300); ns.Render()
             assert(ns.plan.steps[1].recipes[1].name=='Runecloth Shoulders')
             assert(ns.plan.steps[1].recipes[1].crafts==58)
             assert(ns.warningText:GetText():find('rare') or ns.warningText:GetText():find('world%-drop'))
             skills={{skillID=129,name='First Aid',rank=275,maxRank=300}}; ns.Refresh()
-            ns.SetTarget(300); ns.Render(); assert(ns.warningText:GetText():find('Pexmit'))''')
+            ns.SetTarget(300); ns.Render()
+            assert(ns.plan.steps[1].recipes[1].name=='Runecloth Bandage')
+            assert(ns.SetChoice('first-aid','artisan','potions')); ns.Render()
+            assert(ns.plan.steps[1].recipes[1].name=='Major Healing Potion')
+            assert(ns.warningText:GetText():find('Pexmit'))''')
+
+    def test_blacksmithing_125_routes_plan_the_correct_materials(self):
+        self.check('''skills={{skillID=164,name='Blacksmithing',rank=125,maxRank=150}}; ns.Refresh()
+            local function plan(choice)
+                local result=ns.Plan('blacksmithing',ns.player,140,{bronze=choice})
+                local materials={}
+                for _,item in ipairs(result.materials) do materials[item.name]=item.quantity end
+                return result.steps[1].recipes[1],materials
+            end
+            local recipe,materials=plan('default')
+            assert(recipe.name=='Silvered Bronze Gauntlets' and recipe.crafts==15)
+            assert(materials['Bronze Bar']==120 and materials['Silver Bar']==15 and materials['Coarse Stone']==60)
+            recipe,materials=plan('warhammer')
+            assert(recipe.name=='Bronze Warhammer' and recipe.crafts==15)
+            assert(materials['Bronze Bar']==120 and materials['Strong Flux']==15 and materials['Medium Leather']==15)
+            assert(materials['Coarse Stone']==nil and materials['Silver Bar']==nil)''')
 
     def test_source_refresh_retires_only_removed_saved_choices(self):
         self.check('''ns.db.choices={leatherworking={['heavy-hides']='leather'},
-                blacksmithing={imperial='ebon'},alchemy={['finish']='mana'}}
+                blacksmithing={imperial='ebon',bronze='bracers'},alchemy={['finish']='mana'}}
             ns.db.sourceDate='2026-11-12'; ns.db.targets.alchemy=300
             ns.db.exports.alchemy={[3371]=42}; ns.db=nil; ns.LoadSettings()
             assert(ns.db.choices.leatherworking['heavy-hides']==nil)
             assert(ns.db.choices.blacksmithing.imperial==nil)
+            assert(ns.db.choices.blacksmithing.bronze==nil)
             assert(ns.db.choices.alchemy['finish']=='mana')
             assert(ns.db.targets.alchemy==300 and ns.db.exports.alchemy[3371]==42)
             assert(ns.db.sourceDate==ns.SourceDate and ns.status:find('Retired'))''')
@@ -932,9 +1011,9 @@ class AddonTests(unittest.TestCase):
     def test_november17_enchanting_wand_and_dust_routes(self):
         self.check('''skills={{skillID=333,name='Enchanting',rank=70,maxRank=150}}; ns.Refresh()
             ns.SetTarget(100); ns.Render()
-            assert(ns.plan.steps[1].to==85 and ns.plan.steps[1].recipes[1].crafts==23)
+            assert(ns.plan.steps[1].to==85 and ns.plan.steps[1].recipes[1].crafts==21)
             assert(ns.plan.steps[2].from==85 and ns.plan.steps[2].recipes[1].crafts==15)
-            assert(ns.plan.materials[1].name=='Strange Dust' and ns.plan.materials[1].quantity==53)
+            assert(ns.plan.materials[1].name=='Strange Dust' and ns.plan.materials[1].quantity==51)
             skills[1].rank=110; ns.Refresh(); ns.SetTarget(150); ns.Render()
             ns.SetChoice('enchanting','early-path','essence'); ns.Render()
             assert(ns.plan.steps[1].recipes[1].name=='Greater Magic Wand')
@@ -949,8 +1028,8 @@ class AddonTests(unittest.TestCase):
     def test_linked_spurs_and_conflicting_alternates_are_exclusive(self):
         self.check('''skills={{skillID=164,name='Blacksmithing',rank=215,maxRank=300}}; level=60; ns.Refresh()
             ns.SetTarget(270); ns.Render(); assert(ns.SetChoice('blacksmithing','spurs','spurs')); ns.Render()
-            assert(ns.plan.steps[3].from==230 and ns.plan.steps[3].to==245)
-            assert(ns.plan.steps[3].recipes[1].crafts==33)
+            assert(ns.plan.steps[3].from==235 and ns.plan.steps[3].to==245)
+            assert(ns.plan.steps[3].recipes[1].crafts==28)
             assert(ns.GroupForStep('blacksmithing',ns.plan.steps[3]).id=='spurs')
             local before=ns.ActiveChoices('blacksmithing').spurs
             local group,option=ns.FindChoice('blacksmithing','imperial','rapier')
@@ -988,7 +1067,7 @@ class AddonTests(unittest.TestCase):
             skills={{skillID=202,name='Engineering',rank=1,maxRank=150}}; ns.Refresh()
             ns.SetTarget(75); ns.Render()
             mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
-            assert(mats['Rough Stone']==66 and mats['Copper Bar']==72 and mats['Linen Cloth']==33)
+            assert(mats['Rough Stone']==52 and mats['Copper Bar']==58 and mats['Linen Cloth']==26)
             assert(mats['Rough Blasting Powder']==nil and mats['Handful of Copper Bolts']==nil)
             skills[1].rank=250; ns.Refresh(); ns.SetTarget(260); ns.Render()
             assert(ns.plan.steps[1].recipes[1].crafts==44 and ns.plan.materials[1].quantity==88)''')
@@ -1006,7 +1085,7 @@ class AddonTests(unittest.TestCase):
             assert(mats['Spider Ichor']==54 and mats['Bottle of Dalaran Noir']==54)
             assert(mats.Bruiseweed==31 and mats['Hot Spices']==31 and mats['Wool Cloth']==nil)
             ns.SetChoice('first-aid','journeyman','default'); ns.Render()
-            assert(ns.plan.steps[1].recipes[1].crafts==43 and ns.plan.steps[2].recipes[1].crafts==54)''')
+            assert(ns.plan.steps[1].recipes[1].crafts==40 and ns.plan.steps[2].recipes[1].crafts==51)''')
 
     def test_imperial_unlock_and_early_leather_alternate(self):
         self.check('''skills={{skillID=164,name='Blacksmithing',rank=240,maxRank=300}}; ns.Refresh()
@@ -1018,7 +1097,19 @@ class AddonTests(unittest.TestCase):
             assert(ns.plan.steps[1].recipes[1].name=='Light Armor Kit')
             assert(ns.plan.steps[2].recipes[1].name=='Embossed Leather Gloves')
             local mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
-            assert(mats['Light Hide']==24 and mats.Salt>=24)
-            assert(ns.warningText:GetText():find('still need 24'))''')
+            assert(mats['Light Hide']==10 and mats.Salt>=10)
+            assert(ns.warningText:GetText():find('still need 10'))''')
+
+    def test_blacksmithing_finishing_routes_and_recipe_quest_cost(self):
+        self.check('''skills={{skillID=164,name='Blacksmithing',rank=245,maxRank=300}}; level=60; ns.Refresh()
+            local function finish(choice)
+                local plan=ns.Plan('blacksmithing',ns.player,300,{finish=choice})
+                for _,item in ipairs(plan.materials) do
+                    if item.name=='Thorium Bar' then return plan.steps[2].recipes[1].name,item.quantity end
+                end
+            end
+            local name,bars=finish('default'); assert(name=='Radiant Boots' and bars==1068)
+            name,bars=finish('thorium'); assert(name=='Imperial Plate Bracers' and bars==1482)
+            name,bars=finish('imperial'); assert(name=='Imperial Plate Boots' and bars==1780)''')
 
 if __name__=='__main__': unittest.main(verbosity=2)

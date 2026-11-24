@@ -291,7 +291,7 @@ function ns.RenderCostCard(recipe,crafts,index,y,multiple)
             end
             if #self.missingPrices>0 then
                 GameTooltip:AddLine(" ")
-                GameTooltip:AddLine("Missing ingredient prices",1,0.75,0.4)
+                GameTooltip:AddLine("Unavailable materials",1,0.75,0.4)
                 for _,name in ipairs(self.missingPrices) do GameTooltip:AddLine("• "..name,1,1,1,true) end
             end
             GameTooltip:AddLine(" ")
@@ -301,21 +301,24 @@ function ns.RenderCostCard(recipe,crafts,index,y,multiple)
         card:SetScript("OnLeave",function() if GameTooltip then GameTooltip:Hide() end end)
         ns.costCards[index]=card
     end
-    local cost=ns.CraftCost(recipe)
+    local cost=ns.CraftCost(recipe,crafts)
     card.title:SetText(multiple and recipe.name or "Estimated material cost")
     local rowY=math.max(34,card.title:GetStringHeight()+18)
     card.each:SetShown(cost~=nil); card.total:SetShown(cost~=nil)
     for _,row in ipairs(card.rows) do row.label:Hide(); row.each:Hide(); row.total:Hide() end
     if cost then
         local quotes={}
-        if cost.lowLabel then quotes[#quotes+1]={cost.lowLabel,cost.low,cost.missingLow} end
+        if cost.lowLabel then quotes[#quotes+1]={cost.lowLabel,cost.low,cost.missingLow,cost.stepLow,cost.missingStep} end
         if cost.averageLabel then quotes[#quotes+1]={cost.averageLabel,cost.average,cost.missingAverage} end
         for i,quote in ipairs(quotes) do
             local row=card.rows[i]
             local complete=#quote[3]==0
             place(row.label,MUTED..quote[1].."|r",12,rowY)
-            place(row.each,complete and ns.FormatCost(quote[2]) or "|cffffbf69Missing prices|r",308,rowY)
-            place(row.total,complete and crafts and (GOLD..ns.FormatCost(quote[2]*crafts).."|r") or MUTED.."—|r",426,rowY)
+            local total=cost.stockVerified and quote[4] or (crafts and quote[2]*crafts)
+            local stepComplete=cost.stockVerified and #quote[5]==0 or (not cost.stockVerified and complete)
+            place(row.each,complete and ns.FormatCost(quote[2]) or (cost.stockVerified and "|cffffbf69Stock short|r" or "|cffffbf69Missing prices|r"),308,rowY)
+            place(row.total,crafts and stepComplete and (GOLD..ns.FormatCost(total).."|r")
+                or (crafts and cost.stockVerified and "|cffffbf69Stock short|r" or MUTED.."—|r"),426,rowY)
             row.label:Show(); row.each:Show(); row.total:Show()
             rowY=rowY+22
         end
@@ -323,7 +326,8 @@ function ns.RenderCostCard(recipe,crafts,index,y,multiple)
             and ns.Safe(date,"%m/%d %H:%M",cost.scannedAt)
         local footer=cost.source..(stamp and ("  •  "..stamp) or "")
             ..(crafts and ("  •  ~"..crafts.." crafts") or "  •  Choose a target for step totals")
-        card.footer:SetText(MUTED..footer.."  •  Details on hover|r")
+        local stock=cost.source=="AuctionPriceLite" and (cost.stockVerified and "  |  Scanned stock" or "  |  Stock unverified") or ""
+        card.footer:SetText(MUTED..footer..stock.."  •  Details on hover|r")
     else
         rowY=30
         card.footer:SetText(MUTED.."No pricing data provider • Guide and planning remain available|r")
@@ -335,13 +339,21 @@ function ns.RenderCostCard(recipe,crafts,index,y,multiple)
     card.missingPrices={}
     local seen={}
     if cost then
-        for _,missing in ipairs({cost.lowLabel and cost.missingLow or {},cost.averageLabel and cost.missingAverage or {}}) do
+        for _,missing in ipairs({cost.lowLabel and cost.missingLow or {},cost.averageLabel and cost.missingAverage or {},cost.missingStep or {}}) do
             for _,name in ipairs(missing) do
-                if not seen[name] then card.missingPrices[#card.missingPrices+1]=name; seen[name]=true end
+                if not seen[name] then
+                    local shortage=cost.shortages and cost.shortages[name]
+                    card.missingPrices[#card.missingPrices+1]=name..(shortage and (" ("..shortage.found.."/"..shortage.needed.." scanned)") or "")
+                    seen[name]=true
+                end
             end
         end
     end
     card.helpNote=cost and "Saved prices; may have changed." or "Enable a supported pricing addon for estimates."
+    if cost and cost.source=="AuctionPriceLite" then
+        card.helpNote=cost.stockVerified and "Cheapest scanned listings for the required quantity. Stock may have changed."
+            or "Stock unverified. Run a new full scan in AuctionPriceLite."
+    end
     card.footer:ClearAllPoints(); card.footer:SetPoint("TOPLEFT",12,-rowY)
     local height=rowY+card.footer:GetStringHeight()+10
     card:ClearAllPoints(); card:SetPoint("TOPLEFT",0,-y); card:SetHeight(height); card:Show()
@@ -451,29 +463,58 @@ end
 function ns.RenderTrainingNotes(slug,skill)
     local faction=ns.player.faction
     local factionLabel=(faction=="Horde" or faction=="Alliance") and faction or "Faction not detected"
-    local heading={GOLD..ns.Professions[slug].name.." training|r",
-        MUTED..factionLabel.."  |  Skill "..skill.rank.." / "..skill.cap.."  |  Level "..ns.player.level.."|r","",
-        GOLD.."Rank requirements|r"}
-    for _,rank in ipairs(ns.RankRequirements(slug)) do
-        local state=skill.cap>rank.cap and "Trained" or
-            (skill.rank>=rank.skill and ns.player.level>=rank.level and "Ready to train" or "Not ready")
-        heading[#heading+1]=rank.name.." â€” skill "..rank.skill..", level "..rank.level.."  ("..state..")"
-    end
-    heading[#heading+1]=""
-    heading[#heading+1]=GOLD.."Trainers & books|r"
-    heading[#heading+1]=MUTED.."Click a blue name to replace your map waypoint. Neutral contacts are included.|r"
-    if factionLabel=="Faction not detected" then heading[#heading+1]="Only neutral contacts shown until your faction is known." end
     ns.trainingHeader=ns.trainingHeader or text(ns.bodyFrame,"GameFontHighlight",546)
     ns.trainingHeader:Show()
-    local y=place(ns.trainingHeader,table.concat(heading,"\n"),0,0)+12
+    local y=place(ns.trainingHeader,GOLD..ns.Professions[slug].name.." training|r\n"..
+        MUTED..factionLabel.." | Skill "..skill.rank.." / "..skill.cap.."|r",0,0)+14
+    if not ns.trainingNext then
+        local card=panel(ns.bodyFrame,0,0,546,70)
+        card.title=text(card,"GameFontNormalLarge",518); card.title:SetPoint("TOPLEFT",14,-12)
+        card.detail=text(card,"GameFontHighlight",518)
+        ns.trainingNext=card
+    end
+    local nextRank
+    for _,rank in ipairs(ns.RankRequirements(slug)) do
+        if skill.cap<=rank.cap then nextRank=rank; break end
+    end
+    local card=ns.trainingNext
+    local title,detail
+    if nextRank then
+        title="Next rank: "..nextRank.name
+        local needs={}
+        if skill.rank<nextRank.skill then needs[#needs+1]=(nextRank.skill-skill.rank).." more skill" end
+        if ns.player.level<nextRank.level then needs[#needs+1]=(nextRank.level-ns.player.level).." more character levels" end
+        detail=(#needs==0 and (GREEN.."Ready to train|r") or ("Need "..table.concat(needs," and ")))..
+            "\nRequires skill "..nextRank.skill.." and character level "..nextRank.level.."."
+        if nextRank.name=="Journeyman" then detail=detail.." Visit a full trainer in a friendly capital." end
+    elseif slug=="lockpicking" then
+        title="Training follows your level"
+        detail="Your skill cap is "..math.min(300,ns.player.level*5)..". Practice on suitable locks to improve."
+    else
+        title="All profession ranks trained"
+        detail="Continue your route. Individual recipes may still require a trainer or pattern."
+    end
+    card.title:SetText(title)
+    local detailY=12+card.title:GetStringHeight()+8
+    card.detail:ClearAllPoints(); card.detail:SetPoint("TOPLEFT",14,-detailY); card.detail:SetText(detail)
+    local height=detailY+card.detail:GetStringHeight()+14
+    card:ClearAllPoints(); card:SetPoint("TOPLEFT",0,-y); card:SetHeight(height); card:Show()
+    y=y+height+16
+    ns.trainingDirectory=ns.trainingDirectory or text(ns.bodyFrame,"GameFontNormal",546)
+    ns.trainingDirectory:Show()
+    local directory=GOLD.."Trainer directory|r\n"..MUTED.."Click a blue name for a map pin. Neutral contacts included.|r"
+    if factionLabel=="Faction not detected" then directory=directory.."\nOnly neutral contacts shown until your faction is known." end
+    y=place(ns.trainingDirectory,directory,0,y)+12
     ns.trainingRows=ns.trainingRows or {}
     local trainers=ns.TrainersFor(slug)
     for i,entry in ipairs(trainers) do
         local row=ns.trainingRows[i]
         if not row then
-            row=CreateFrame("Button",nil,ns.bodyFrame)
+            row=CreateFrame("Button",nil,ns.bodyFrame,"BackdropTemplate")
+            row:SetWidth(546); row:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8"})
+            row:SetBackdropColor(0.10,0.12,0.15,1)
             row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight")
-            row.label=text(row,"GameFontHighlight",534); row.label:SetPoint("TOPLEFT",6,-4)
+            row.label=text(row,"GameFontHighlight",522); row.label:SetPoint("TOPLEFT",12,-10)
             row:SetScript("OnClick",function(self)
                 local _,message=ns.PinTrainer(self.entry)
                 ns.status=message; ns.statusText:SetText(message)
@@ -484,36 +525,50 @@ function ns.RenderTrainingNotes(slug,skill)
         local pin=entry.map and entry.x and entry.y
         row:SetEnabled(not not pin)
         local name=pin and ("|cff66c7ff["..entry.name.."]|r") or entry.name
-        local location=entry.location..(pin and ("  â€¢  "..entry.x..", "..entry.y) or "  â€¢  Pin not available")
-        row.label:SetText(GOLD..entry.role.."|r  "..name.."\n"..MUTED..location.."|r"..(entry.note and ("\n"..entry.note) or ""))
-        local height=row.label:GetStringHeight()+12
+        local location=entry.location..(pin and (" ("..entry.x..", "..entry.y..")") or "")
+        row.label:SetText(name.."  "..GOLD..entry.role.."|r\n"..MUTED..location.."|r"..
+            (entry.note and ("\n"..entry.note) or ""))
+        height=row.label:GetStringHeight()+20
         row:ClearAllPoints(); row:SetPoint("TOPLEFT",0,-y); row:SetSize(546,height); row:Show()
         y=y+height+8
     end
-    local notes={}
-    if #trainers==0 then notes[#notes+1]="Visit a full profession trainer in a friendly capital. Ask a guard for directions." end
     local tips=ns.TrainingTips[slug]
+    local notes={}
+    if #trainers==0 then notes[#notes+1]="Ask a guard in a friendly capital for a profession trainer." end
     if tips then
-        notes[#notes+1]=GOLD.."Profession notes|r"
         if tips.common then notes[#notes+1]=tips.common end
         if tips[faction] then notes[#notes+1]=tips[faction] end
-        notes[#notes+1]=""
     end
-    notes[#notes+1]=GOLD.."Planning supplies|r"
-    notes[#notes+1]="Keep crafted intermediates. The shopping list credits carried supplies and expands only missing intermediates."
-    notes[#notes+1]="Tools, books, patterns and training fees are separate."
-    if slug=="blacksmithing" then notes[#notes+1]="Required Imperial Plate recipe quest bars are included in your plan." end
-    if slug=="cooking" then notes[#notes+1]="Required Artisan Cooking quest supplies are included in your plan." end
-    notes[#notes+1]=""
-    notes[#notes+1]=GOLD.."Choices & exports|r"
-    notes[#notes+1]="Compare alternatives before changing recipes. Linked steps change together; choices save per character."
-    notes[#notes+1]="Export only updates farming goals when clicked. Higher goals stay; remove old goals manually. Separate plans do not add shared totals together."
-    notes[#notes+1]=""
-    notes[#notes+1]=GOLD.."Source & estimates|r"
-    notes[#notes+1]="WoW-Professions.com / Forever â€” data checked "..ns.SourceDate
-    notes[#notes+1]="Higher-level routes remain provisional; some alternates give minimum craft counts. Auction estimates use saved prices. Crafting is manual."
-    ns.notesText:Show()
-    return place(ns.notesText,table.concat(notes,"\n"),0,y+8)+20
+    if #notes>0 then
+        ns.notesText:Show(); y=place(ns.notesText,table.concat(notes,"\n"),0,y+6)+14
+    end
+    if not ns.trainingHelpButton then
+        ns.trainingHelpButton=button(ns.bodyFrame,"All ranks & guide help",210,0,0,function()
+            ns.showTrainingHelp=not ns.showTrainingHelp; ns.Render()
+        end)
+    end
+    ns.trainingHelpButton:ClearAllPoints(); ns.trainingHelpButton:SetPoint("TOPLEFT",0,-y)
+    ns.trainingHelpButton:SetText(ns.showTrainingHelp and "Hide reference details" or "All ranks & guide help")
+    ns.trainingHelpButton:Show(); y=y+38
+    ns.trainingReference=ns.trainingReference or text(ns.bodyFrame,"GameFontHighlightSmall",546)
+    if ns.showTrainingHelp then
+        local reference={GOLD.."All rank requirements|r"}
+        for _,rank in ipairs(ns.RankRequirements(slug)) do
+            reference[#reference+1]=rank.name..": skill "..rank.skill..", level "..rank.level..
+                (skill.cap>rank.cap and " (trained)" or "")
+        end
+        reference[#reference+1]=""
+        reference[#reference+1]=GOLD.."Planning & exports|r"
+        reference[#reference+1]="Carried intermediates reduce shopping needs. Tools, books, patterns and training fees are separate."
+        reference[#reference+1]="Recipe choices save per character. Export changes farming goals only when clicked; higher goals stay. Remove old goals manually."
+        reference[#reference+1]="Higher-level routes remain provisional. Craft counts and saved auction prices are estimates."
+        ns.trainingReference:Show(); y=place(ns.trainingReference,table.concat(reference,"\n"),0,y)+14
+    else
+        ns.trainingReference:Hide()
+    end
+    ns.trainingSource=ns.trainingSource or text(ns.bodyFrame,"GameFontHighlightSmall",546)
+    ns.trainingSource:Show()
+    return place(ns.trainingSource,MUTED.."WoW-Professions.com / Forever | Data checked "..ns.SourceDate.."|r",0,y)+20
 end
 
 function ns.Render(resetInput)
@@ -523,7 +578,7 @@ function ns.Render(resetInput)
     local target=slug and ns.db.targets[slug]
     local context=(slug or "")..":"..tostring(target)
     if ns.routeContext~=context then
-        ns.routeSelection=nil; ns.showNotes=false; ns.showComparison=false; ns.choiceDelta=nil; ns.routeContext=context; resetInput=true
+        ns.routeSelection=nil; ns.showNotes=false; ns.showTrainingHelp=false; ns.showComparison=false; ns.choiceDelta=nil; ns.routeContext=context; resetInput=true
     end
     ns.characterText:SetText("Level "..ns.player.level.."  |  "..(ns.player.faction or "Unknown faction"))
     ns.profButton:SetText(skill and (ns.IconTag(ns.ProfessionIcon(slug),18)..skill.name.."  "..skill.rank.." / "..skill.cap.."   >") or "No profession detected")
@@ -538,6 +593,9 @@ function ns.Render(resetInput)
     for _,card in ipairs(ns.costCards) do card:Hide() end
     ns.notesText:Hide()
     if ns.trainingHeader then ns.trainingHeader:Hide() end
+    for _,key in ipairs({"trainingNext","trainingDirectory","trainingHelpButton","trainingReference","trainingSource"}) do
+        if ns[key] then ns[key]:Hide() end
+    end
     for _,row in ipairs(ns.trainingRows or {}) do row:Hide() end
     local height=480
     if skill and not ns.showNotes then

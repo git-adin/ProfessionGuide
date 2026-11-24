@@ -59,6 +59,10 @@ class PackageTests(unittest.TestCase):
                 for entry in expected:
                     source = ROOT / SOURCE_DIR / entry.split("/", 1)[1]
                     self.assertEqual(archive.read(entry), source.read_bytes())
+                    if source.suffix in {'.lua', '.md', '.toc'}:
+                        content = archive.read(entry).decode('utf-8-sig')
+                        for broken in ('\u00e2\u20ac', '\u00c3\u00a2', '\ufffd'):
+                            self.assertNotIn(broken, content, f'Broken text encoding in {entry}')
             reported = (output / "SHA256SUMS.txt").read_text().splitlines()
             self.assertEqual(
                 reported,

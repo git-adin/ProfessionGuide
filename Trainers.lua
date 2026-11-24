@@ -57,9 +57,9 @@ ns.TrainingTips={
     ["first-aid"]={common="Buy the Heavy Silk and Mageweave manuals too. Triage requires skill 225 and level 35 despite the quest's level 45 label.",Horde="The Major Healing Potion manual is also a reward from A Rest Without Pain after Herbs for the Bruised and Weary."},
     cooking={common="Buy fish recipes from vendors and cook beside a fire."},
     mining={common="Junior starting-area trainers stop at 75; visit a full trainer or a capital for Journeyman.",Alliance="Optional bonus: Twilight Mine Light (+4 Mining), from A Miner Problem in Riverglades."},
-    herbalism={common="Junior starting-area trainers stop at 75; visit a full trainer for Journeyman."},
+    herbalism={common="Junior starting-area trainers stop at 75; visit a full trainer for Journeyman.",Horde="Optional bonus: Apothecary Gloves (+2 Herbalism), from Serpentbloom. Apothecary Zamah starts the quest in Thunder Bluff; gather the herbs in Wailing Caverns."},
     skinning={common="Junior starting-area trainers stop at 75; visit a full trainer for Journeyman.",Horde="Optional bonus: Keen Skinning Knife (+3 Skinning), from Unwelcome Guests in The Barrens."},
-    lockpicking={common="Skill cap is five times your character level, up to 300. Use Angor Fortress through 225, then upper Slag Pit footlockers through 300. Reader reports underpin the final range."},
+    lockpicking={common="Skill cap is five times your character level, up to 300. Use Angor Fortress through 225, then upper Slag Pit or Lost Rigger Cove footlockers through 300."},
 }
 function ns.TrainersFor(slug)
     local faction=ns.player and ns.player.faction
