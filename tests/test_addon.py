@@ -219,12 +219,20 @@ class AddonTests(unittest.TestCase):
         self.lua.execute(source.read_text(encoding='utf-8'),'AuctionPriceLite',self.lua.table())
         self.check('''Fire('ADDON_LOADED','AuctionPriceLite'); Fire('PLAYER_ENTERING_WORLD')
             local c=ns.CraftCost({materials={{name='Bronze Bar',quantity=5},{name='Coarse Grinding Stone',quantity=2}}})
-            assert(c.source=='AuctionPriceLite' and c.low==555 and c.average==830 and c.scannedAt==10000)''')
+            assert(c.source=='AuctionPriceLite' and c.low==555 and c.average==830 and c.scannedAt==10000)
+            assert(c.averageLabel==nil)
+            AuctionPriceLiteDB.snapshots['1:15:Alliance'].stock={
+                [2841]={{101,5},{200,10}},[3478]={{25,100}}}
+            c=ns.CraftCost({materials={{name='Bronze Bar',quantity=5},{name='Coarse Grinding Stone',quantity=2}}},3)
+            assert(c.stockVerified and c.low==555 and c.stepLow==2655)
+            AuctionPriceLiteDB.snapshots['1:15:Alliance'].stock[2841]={{101,5}}
+            c=ns.CraftCost({materials={{name='Bronze Bar',quantity=5}}},3)
+            assert(c.shortages['Bronze Bar'].found==5 and c.shortages['Bronze Bar'].needed==15)''')
 
     def test_training_notes_filter_faction_and_hide_rows(self):
         self.check('''skills={{skillID=164,name='Blacksmithing',rank=131,maxRank=150}}; ns.Refresh()
             ns.player.faction='Horde'; ns.showNotes=true; ns.Render()
-            assert(ns.trainingHeader:GetText():find('Horde') and ns.trainingHeader:GetText():find('Ready to train'))
+            assert(ns.trainingHeader:GetText():find('Horde') and ns.trainingNext.detail:GetText():find('Ready to train'))
             assert(ns.trainingRows[1].label:GetText():find('Saru Steelfury'))
             assert(not ns.trainingRows[1].label:GetText():find('Bengus'))
             assert(ns.trainingRows[2].label:GetText():find('Brikk'))
@@ -232,7 +240,7 @@ class AddonTests(unittest.TestCase):
             ns.player.faction='Alliance'; ns.Render()
             assert(ns.trainingRows[1].label:GetText():find('Bengus'))
             ns.player.faction=nil; ns.Render()
-            assert(ns.trainingHeader:GetText():find('Only neutral'))
+            assert(ns.trainingDirectory:GetText():find('Only neutral'))
             assert(ns.trainingRows[1].label:GetText():find('Brikk'))
             assert(not ns.trainingRows[3]:IsShown())
             ns.showNotes=false; ns.Render()
@@ -308,7 +316,8 @@ class AddonTests(unittest.TestCase):
             assert(card:IsShown() and card.each:GetText()=='Each craft' and card.total:GetText()=='This step')
             assert(card.rows[1].each:GetText()=='18s 0c')
             assert(card.rows[1].total:GetText():find('4g 32s 0c'))
-            assert(card.rows[2].total:GetText():find('8g 64s 0c'))
+            assert(not card.rows[2].total:IsShown())
+            assert(card.footer:GetText():find('Stock unverified'))
             assert(not ns.detailText:GetText():find('AuctionPriceLite'))
             assert(card.helpRows[3][1]=='Owned materials' and card.helpRows[3][2]=='Included in value')
             assert(ns.tableHead[2].title=='In bags' and ns.tableHead[3].title=='Required' and ns.tableHead[4].title=='To get')
@@ -347,6 +356,54 @@ class AddonTests(unittest.TestCase):
             assert(body:find('Empty Vial') and not body:find('per craft; about') and #body<160)
             card:GetScript('OnLeave')(card); assert(not tooltipShown)
             card:GetScript('OnEnter')(card); assert(clears==2 and #rows==3)''')
+
+    def test_training_view_prioritizes_next_rank_and_collapses_reference(self):
+        self.check('''skills={{skillID=333,name='Enchanting',rank=45,maxRank=75}}; ns.Refresh()
+            ns.Command('show'); ns.showNotes=true; ns.Render()
+            assert(ns.trainingNext.title:GetText()=='Next rank: Journeyman')
+            assert(ns.trainingNext.detail:GetText():find('Need 5 more skill'))
+            assert(not ns.trainingReference:IsShown() and not ns.notesText:IsShown())
+            assert(ns.trainingRows[1].label:GetText():find('Kitta Firewind'))
+            ns.trainingHelpButton:GetScript('OnClick')()
+            assert(ns.trainingReference:IsShown() and ns.trainingReference:GetText():find('Artisan: skill 200'))
+            ns.trainingHelpButton:GetScript('OnClick')(); assert(not ns.trainingReference:IsShown())
+            skills[1].rank=50; ns.Refresh(); assert(ns.trainingNext.detail:GetText():find('Ready to train'))
+            skills[1].maxRank=150; ns.Refresh(); assert(ns.trainingNext.title:GetText()=='Next rank: Expert')
+            skills[1].maxRank=300; ns.Refresh(); assert(ns.trainingNext.title:GetText()=='All profession ranks trained')
+            ns.showNotes=false; ns.Render()
+            assert(not ns.trainingNext:IsShown() and not ns.trainingSource:IsShown() and not ns.trainingHelpButton:IsShown())
+            assert(next(ns.db.targets)==nil and next(ns.db.exports)==nil)''')
+
+    def test_quantity_pricing_uses_step_depth_and_reports_stock_shortages(self):
+        self.check('''local r={materials={{name='Bronze Bar',quantity=5},{name='Coarse Grinding Stone',quantity=2}}}
+            local tiers={[2841]={{10,5},{100,20}},[3478]={{20,100}}}
+            AuctionPriceLite={GetScanTime=function() return 10000,true,true end,
+                GetItemPrice=function() error('Broad scan average must not be used') end,
+                GetItemCost=function(id,quantity)
+                    local total,found=0,0
+                    for _,tier in ipairs(tiers[id] or {}) do
+                        local take=math.min(quantity-found,tier[2]); total=total+take*tier[1]; found=found+take
+                        if found==quantity then return total,found end
+                    end
+                    return nil,found
+                end}
+            local c=ns.CraftCost(r,3)
+            assert(c.stockVerified and c.low==90 and c.stepLow==1170 and not c.averageLabel)
+            assert(c.stepLow~=c.low*3)
+            ns.RenderCostCard(r,3,1,0,false)
+            local card=ns.costCards[1]
+            assert(card.rows[1].each:GetText()=='90c' and card.rows[1].total:GetText():find('11s 70c'))
+            assert(not card.rows[2].label:IsShown())
+            tiers[2841]={{10,6}}
+            c=ns.CraftCost(r,3)
+            assert(c.low==90 and #c.missingLow==0 and #c.missingStep==1)
+            assert(c.shortages['Bronze Bar'].found==6 and c.shortages['Bronze Bar'].needed==15)
+            ns.RenderCostCard(r,3,1,0,false)
+            assert(card.rows[1].each:GetText()=='90c' and card.rows[1].total:GetText():find('Stock short'))
+            assert(card.missingPrices[1]:find('6/15 scanned'))
+            assert(ns.CraftCostText(r,3):find('step stock incomplete'))
+            tiers[2841]=nil; c=ns.CraftCost(r,3)
+            assert(#c.missingLow==1 and c.shortages['Bronze Bar'].found==0)''')
 
     def test_no_target_no_plan_or_export(self):
         self.check('''assert(ns.plan==nil and next(ns.db.targets)==nil)
@@ -542,7 +599,7 @@ class AddonTests(unittest.TestCase):
     def test_workshop_notes_and_clear_target(self):
         self.check('''ns.Command('show'); ns.SetTarget(120); ns.Render()
             ns.notesButton:GetScript('OnClick')()
-            assert(ns.showNotes and ns.notesText:IsShown() and not ns.recipeText:IsShown())
+            assert(ns.showNotes and ns.trainingHeader:IsShown() and not ns.recipeText:IsShown())
             assert(ns.trainingRows[1].label:GetText():find('Ainethil'))
             ns.notesButton:GetScript('OnClick')()
             assert(not ns.showNotes and ns.recipeText:IsShown())
