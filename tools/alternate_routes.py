@@ -106,6 +106,13 @@ def build(guides, soups, recipe, items):
     add('leatherworking','early-gloves','Pants or gloves',[[70,80]],'Embossed Leather Pants',
         o('gloves','Embossed Leather Gloves',[b(70,80,
             s(70,80,'14x Embossed Leather Gloves - 42 Light Leather, 28 Coarse Thread'))]))
+    add('leatherworking','guardians','Gloves or harnesses',[[165,185]],'Guardian Gloves, then Barbaric Harness',
+        o('gloves','Guardian Gloves',[b(165,185,
+            s(165,185,'20x Guardian Gloves - 80 Heavy Leather, 20 Cured Heavy Hide, 20 Silken Thread'))],
+          'Uses the guide’s ten orange crafts per ten points at 165-185.'),
+        o('harness','Barbaric Harness',[b(165,185,
+            s(165,185,'20x Barbaric Harness - 280 Heavy Leather, 40 Fine Thread, 20 Iron Buckle'))],
+          'Start the harness early if you lack cured hides.'))
     add('leatherworking','shoes','Gauntlets or shoes',[[235,265]],'Wicked Leather Gauntlets',
         o('shoes','Blue Suede Shoes',[b(235,265,s(235,265,'36x Blue Suede Shoes - 288 Rugged Leather, 36 Blue Dye, 36 Rune Thread'))],
           'Requires the Blue Suede Shoes pattern. Source compares vendor resale value; no live auction price is assumed.'))
@@ -122,7 +129,7 @@ def build(guides, soups, recipe, items):
         o('belts','Runecloth Belt',[b(215,225,s(215,225,'10x Runecloth Belt - 30 Bolt of Runecloth, 10 Rune Thread'))],
           'Requires Artisan Tailoring, even though this step is below 225.',35))
     add('tailoring','finish','Final tailoring recipe',[[280,300]],'Runecloth Shoulders',
-        o('turban','Wizardweave Turban',[b(280,300,s(280,300,'58x Wizardweave Turban - 348 Bolt of Runecloth, 232 Dream Dust, 58 Star Ruby'))],
+        o('turban','Wizardweave Turban',[b(280,300,s(280,300,'58x Wizardweave Turban - 348 Bolt of Runecloth, 232 Dream Dust, 58 Star Ruby, 58 Rune Thread'))],
           'Requires a rare pattern; check availability before buying materials. Both 280-300 options depend on world-drop patterns.'))
     add('first-aid','starter','Bandages or potions',[[1,75]],'Linen bandages',
         o('potions','Minor Healing Potion',[b(1,75,s(1,75,'86x Minor Healing Potion - 86 Peacebloom, 86 Mild Spices, 86 Empty Vial'))],

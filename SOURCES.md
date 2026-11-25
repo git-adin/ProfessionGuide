@@ -1,6 +1,6 @@
 # Source provenance
 
-Snapshot date: **2026-11-23**. Recipe names, skill ranges, estimated craft counts,
+Snapshot date: **2026-11-25**. Recipe names, skill ranges, estimated craft counts,
 ingredient quantities and location facts were checked against the pages below.
 Guide prose and maps are not bundled. UI instructions are original summaries.
 Upstream guides describe beta-derived and untested higher-level content; the
@@ -28,7 +28,7 @@ requirements are calculated from the remaining steps and chosen target.
 
 Default branch policy: first continuous recipe branch, the active Strange Dust
 Enchanting tab, First Aid bandages at low skill and the first cooking-table option;
-both Engineering 135-150 components are required. Reviewed alternate branches
+both Engineering 135-150 and 190-195 crafts are required. Reviewed alternate branches
 are defined in `tools/alternate_routes.py`, including linked replacements. Cooking
 table options retain ingredient facts and vendor/quest locations, not guide prose.
 Sparse suggestions without verifiable ingredients are not compiled as recipes.
@@ -82,6 +82,20 @@ Blacksmithing 125–140 now defaults to 15 Silvered Bronze Gauntlets, with
 Coarse Grinding Stones needed for the gauntlets. The source also lists rare
 Blessed Plate plans without complete per-step craft estimates. The Enchanting
 page removed a character-level claim and its compiled recipe route is unchanged.
+
+## November 25 recipe review
+
+Solid Blasting Powder produces two per craft, which reduces the purchased
+materials needed by later Engineering steps. Kor'gar in Riverglades also
+sells the Thorium Tube schematic. Leatherworking can use all Guardian
+Gloves or all Barbaric Harnesses through 165-185. The Wizardweave Turban
+alternate now includes its Rune Thread.
+
+## November 24 Engineering review
+
+Updated the early bomb counts, revised the 175-195 bands, and included both
+the Gyromatic Micro-Adjustor and Iron Grenades at 190-195. The other reviewed
+profession and gathering steps compile to the same recipe routes.
 
 ## November 23 guide review
 

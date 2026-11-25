@@ -1,80 +1,80 @@
 {
   "alchemy": {
     "url": "https://www.wow-professions.com/forever/alchemy-leveling-guide",
-    "checked": "2026-11-23",
-    "sha256": "3271ce78dc357082491c4a5c1a56fdede322d583aa6bd8bc16d05076a6121ea8",
+    "checked": "2026-11-25",
+    "sha256": "1e977d1c63de9eac6c8f2e326b934f040be9c5ee6b8daa5d1a1e07e7a328fc9a",
     "contentChanged": true
   },
   "blacksmithing": {
     "url": "https://www.wow-professions.com/forever/blacksmithing-leveling-guide",
-    "checked": "2026-11-23",
-    "sha256": "b75e12282a4aab0c88f1aa94e7b0dcb8d2400d7c4968a4896974f66f2ea08b4f",
-    "contentChanged": true
+    "checked": "2026-11-25",
+    "sha256": "834d8fb954b9986b1069fe0e34621ece4d069846a9f3728524bb3072c4fe8ef9",
+    "contentChanged": false
   },
   "enchanting": {
     "url": "https://www.wow-professions.com/forever/enchanting-leveling-guide",
-    "checked": "2026-11-23",
-    "sha256": "3adc9f89a344fdcf32826ff56febb2ec7f83e07e26bd632db4197c263952ca83",
-    "contentChanged": true
+    "checked": "2026-11-25",
+    "sha256": "e7463ca9edc4122057c92a94caaaf449b6d4ea9524716ced5ea7b7340cb5bef8",
+    "contentChanged": false
   },
   "engineering": {
     "url": "https://www.wow-professions.com/forever/engineering-leveling-guide",
-    "checked": "2026-11-23",
-    "sha256": "50be2475f20403a2af49132b9cd28794b274c8ddba1ef6aa53f435f75e382e35",
+    "checked": "2026-11-25",
+    "sha256": "7c4a9251cd87fe26bfc3726c451331aa704abe69684b7267a9cac65cb01e57b3",
     "contentChanged": true
   },
   "leatherworking": {
     "url": "https://www.wow-professions.com/forever/leatherworking-leveling-guide",
-    "checked": "2026-11-23",
-    "sha256": "3b63ebec6996402b2202a587a362c3081de6843228dbfdfa6fa85698f1b8b380",
+    "checked": "2026-11-25",
+    "sha256": "9e56b591c61ec1c61b60a3359ba9968cc072903bc36cc567b15eac4f84920750",
     "contentChanged": true
   },
   "tailoring": {
     "url": "https://www.wow-professions.com/forever/tailoring-leveling-guide",
-    "checked": "2026-11-23",
-    "sha256": "306f7159c8e98426fa4cbc73840fec2332bdcbafcf89a81e00295a7814dc978a",
+    "checked": "2026-11-25",
+    "sha256": "f18ab6640117f76f5bd6e45a33d21e3114697859b3e09079ed6a9deec2c9511b",
     "contentChanged": true
   },
   "first-aid": {
     "url": "https://www.wow-professions.com/forever/first-aid-leveling-guide",
-    "checked": "2026-11-23",
-    "sha256": "c0236453af32b3de744a53a5fd7b345fc73b5ea44138c59ec6c904ae7b668fc5",
-    "contentChanged": true
+    "checked": "2026-11-25",
+    "sha256": "5a7f811130ecd7e7cd06d199147a985e27421dcc109c20c4cc36381e737af85e",
+    "contentChanged": false
   },
   "cooking": {
     "url": "https://www.wow-professions.com/forever/cooking-leveling-guide",
-    "checked": "2026-11-23",
-    "sha256": "550d208655d8759c9c821ae1787d87458d7eb2620a03867498fa28c7d253e44a",
-    "contentChanged": true
+    "checked": "2026-11-25",
+    "sha256": "159dc83d2d3dc9add9d54d5f0499a0d620ebe359484b8d18ce1944763290074c",
+    "contentChanged": false
   },
   "mining": {
     "url": "https://www.wow-professions.com/forever/mining-leveling-guide",
-    "checked": "2026-11-23",
-    "sha256": "b7215c92991bbbb6c0be127a8a2c49257160bd0fb816bbf49cade6d36544cbc7",
-    "contentChanged": true
+    "checked": "2026-11-25",
+    "sha256": "65b29339e740afeb9c44a704a67d336490a6d1017dda1a868f471af8efa92d7b",
+    "contentChanged": false
   },
   "herbalism": {
     "url": "https://www.wow-professions.com/forever/herbalism-leveling-guide",
-    "checked": "2026-11-23",
-    "sha256": "56409ca5494114840a06eb2e2b94ee26d63221f5a2a217f878735314656f3f6f",
-    "contentChanged": true
+    "checked": "2026-11-25",
+    "sha256": "c71c05c89513f431953fc351f1222784ddfd2edd3498f6eb4d4c59eb130bb4dd",
+    "contentChanged": false
   },
   "skinning": {
     "url": "https://www.wow-professions.com/forever/skinning-leveling-guide",
-    "checked": "2026-11-23",
-    "sha256": "ae70dd28b81b547e9799fa33d744c5ca933b065170c25d822e31a05de6d04fa0",
-    "contentChanged": true
+    "checked": "2026-11-25",
+    "sha256": "4d70fb6f4856d71a8997469c17700919cb3f6b7708a24d717cd5d5490e0d8313",
+    "contentChanged": false
   },
   "fishing": {
     "url": "https://www.wow-professions.com/forever/fishing-leveling-guide",
-    "checked": "2026-11-23",
-    "sha256": "1344ef82afd862cdd697d2ee1322f1455d6b9b2927a6629dd4c53836f25bcdca",
-    "contentChanged": true
+    "checked": "2026-11-25",
+    "sha256": "b255c73da32c9b01af0ae467514f1e4c798527e02405fcf94de7150150633769",
+    "contentChanged": false
   },
   "lockpicking": {
     "url": "https://www.wow-professions.com/forever/lockpicking-leveling-guide",
-    "checked": "2026-11-23",
-    "sha256": "fc617a22dea56c9be7ea7476150891cd5df8d888994dece6577214c4becccc6e",
-    "contentChanged": true
+    "checked": "2026-11-25",
+    "sha256": "56130170127f4dfaf3254000037f6b39970f6132a9e3b3583ef52f8e211539e4",
+    "contentChanged": false
   }
 }
