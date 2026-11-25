@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 ROOT = Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--cache-dir',type=Path,default=ROOT/'tools/.source-cache')
-parser.add_argument('--source-date',default='2026-11-23')
+parser.add_argument('--source-date',default='2026-11-25')
 args=parser.parse_args()
 SLUGS = ['alchemy','blacksmithing','enchanting','engineering','leatherworking','tailoring','first-aid','cooking']
 items, spells, recipe_icons = {}, {}, {}
@@ -62,7 +62,7 @@ def recipe(text):
         amount, material = x.groups()
         material = re.sub(r'\s*\(.*', '', material).rstrip('.')
         mats.append({'name':material,'quantity':int(amount)/int(count)})
-    return {'name':name,'spell':spells.get(name,0),'crafts':int(count),'materials':mats,'yield':2 if name in ['Fire Oil','Stonescale Oil'] else 1}
+    return {'name':name,'spell':spells.get(name,0),'crafts':int(count),'materials':mats,'yield':2 if name in ('Fire Oil','Stonescale Oil','Solid Blasting Powder') else 1}
 
 guides = {}
 for slug,soup in soups.items():
@@ -104,7 +104,7 @@ for slug,soup in soups.items():
                 r=recipe(cells[1].get_text(' ',strip=True)+' - '+materials)
                 choices=[r] if r else []
             if not choices: raise ValueError((slug,lo,'No recipe'))
-            chosen=choices if slug=='engineering' and lo==135 else choices[:1]
+            chosen=choices if slug=='engineering' and lo in (135,190) else choices[:1]
         else: chosen=[r]
         steps.append({'from':lo,'to':hi,'recipes':chosen})
         seen.add((lo,hi))
@@ -176,7 +176,7 @@ reviewed_notes={
     ('blacksmithing',125):'Silvered Bronze Gauntlets require 30 Coarse Grinding Stones. Use any you have left or make the rest before crafting the gauntlets.',
     ('blacksmithing',270):'Radiant Boots and Radiant Leggings require world-drop plans. Compare the other finishing routes if the plans are unavailable or expensive.',
     ('engineering',260):'Buy Schematic: Thorium Widget from Sovik (Orgrimmar) or Gearcutter Cogspinner (Ironforge).',
-    ('engineering',280):'Buy the bind-on-pickup Thorium Tube schematic from Xizzer Fizzbolt in Everlook, Winterspring, on this character.',
+    ('engineering',280):'Buy the bind-on-pickup Thorium Tube schematic from Xizzer Fizzbolt in Everlook or Kor\'gar in Riverglades on this character.',
     ('tailoring',200):'These shoulders require an Artisan trainer; the Expert trainers do not teach them.',
     ('tailoring',240):'Runecloth Gloves pattern: Qia, Winterspring.',
     ('tailoring',250):'Runecloth Cuffs pattern: Pexmit, Mount Hyjal (bind on pickup). Optional Horde quest source: Threading a Solution from Kal\'tinzan, Elderwild, Mount Hyjal; level 54 and 6 Bolt of Runecloth. Quest skill requirement is unverified.',

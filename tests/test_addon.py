@@ -942,8 +942,28 @@ class AddonTests(unittest.TestCase):
             mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
             assert(mats['Linen Cloth']==nil)''')
 
+    def test_november25_recipe_yield_and_alternates(self):
+        self.check('''local player={level=60,faction='Alliance',professions={
+                engineering={rank=175,cap=300},leatherworking={rank=165,cap=225},
+                tailoring={rank=280,cap=300}}}
+            local plan=assert(ns.Plan('engineering',player,250,{}))
+            local r=plan.steps[1].recipes[1]
+            assert(r.name=='Solid Blasting Powder' and r.crafts==31)
+            local solidStone
+            for _,m in ipairs(plan.materials) do
+                if m.name=='Solid Stone' then solidStone=m.quantity end
+            end
+            assert(solidStone==62)
+            plan=assert(ns.Plan('leatherworking',player,185,{guardians='gloves'}))
+            assert(#plan.steps==1 and plan.steps[1].recipes[1].crafts==20)
+            plan=assert(ns.Plan('leatherworking',player,185,{guardians='harness'}))
+            assert(#plan.steps==1 and plan.steps[1].recipes[1].name=='Barbaric Harness')
+            plan=assert(ns.Plan('tailoring',player,300,{finish='turban'}))
+            local mats={}; for _,m in ipairs(plan.materials) do mats[m.name]=m.quantity end
+            assert(mats['Rune Thread']==58)''')
+
     def test_current_source_routes_and_oil_yield(self):
-        self.check('''assert(ns.SourceDate=='2026-11-23')
+        self.check('''assert(ns.SourceDate=='2026-11-25')
             skills={{skillID=171,name='Alchemy',rank=250,maxRank=300}}; ns.Refresh()
             ns.SetTarget(300); ns.Render()
             assert(ns.plan.steps[1].recipes[1].name=='Stonescale Oil')
@@ -1067,8 +1087,12 @@ class AddonTests(unittest.TestCase):
             skills={{skillID=202,name='Engineering',rank=1,maxRank=150}}; ns.Refresh()
             ns.SetTarget(75); ns.Render()
             mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
-            assert(mats['Rough Stone']==52 and mats['Copper Bar']==58 and mats['Linen Cloth']==26)
+            assert(mats['Rough Stone']==56 and mats['Copper Bar']==62 and mats['Linen Cloth']==28)
             assert(mats['Rough Blasting Powder']==nil and mats['Handful of Copper Bolts']==nil)
+            skills[1].rank=190; ns.Refresh(); ns.SetTarget(195); ns.Render()
+            local recipes=ns.plan.steps[1].recipes
+            assert(#recipes==2 and recipes[1].name=='Gyromatic Micro-Adjustor')
+            assert(recipes[2].name=='Iron Grenade' and recipes[2].crafts==10)
             skills[1].rank=250; ns.Refresh(); ns.SetTarget(260); ns.Render()
             assert(ns.plan.steps[1].recipes[1].crafts==44 and ns.plan.materials[1].quantity==88)''')
 
