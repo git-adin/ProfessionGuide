@@ -26,7 +26,7 @@ def build(guides, soups, recipe, items):
             s(250,265,'21x Elixir of Greater Intellect - 21 Blindweed, 21 Khadgar\'s Whisker, 21 Crystal Vial'),
             s(265,300,'55x Superior Mana Potion - 110 Sungrass, 110 Blindweed, 55 Crystal Vial'))],
           'Changes 250-300 together. Skip Stonescale Oil. Superior Mana recipe: Algernon (Undercity) or Ulthir (Darnassus).'))
-    add('blacksmithing','silver','Belt or rod',[[75,80]],'Silver Rod',
+    add('blacksmithing','silver','Grinding stone or belt',[[75,80]],'Rough Grinding Stone',
         o('belt','Runed Copper Belt',[b(75,80,s(75,80,'5x Runed Copper Belt - 50 Copper Bar'))]))
     add('blacksmithing','bronze','Bronze recipe',[[125,140]],'Silvered Bronze Gauntlets',
         o('warhammer','Bronze Warhammer',[b(125,140,s(125,140,'15x Bronze Warhammer - 120 Bronze Bar, 15 Strong Flux, 15 Medium Leather'))],
@@ -142,7 +142,7 @@ def build(guides, soups, recipe, items):
 
     add('first-aid','artisan','Bandages or healing potions',[[260,300]],'Runecloth bandages',
         o('potions','Runecloth Bandage, then Major Healing Potion',[b(260,300,
-            s(260,275,'22x Runecloth Bandage - 22 Runecloth'),
+            s(260,275,'24x Runecloth Bandage - 24 Runecloth'),
             s(275,300,'30x Major Healing Potion - 30 Golden Sansam, 90 Soothing Spices, 30 Crystal Vial'))],
           'Bandage count is scaled from the guide. Potion manual: Pexmit in Mount Hyjal, the Auction House, or the Horde quest A Rest Without Pain.'))
 

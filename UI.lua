@@ -249,7 +249,8 @@ function ns.BuildRoute(slug,skill)
         b.icon:SetTexture(ns.StepIcon(slug,step))
         local names={}
         for _,r in ipairs(step.recipes or {}) do names[#names+1]=r.name end
-        local name=#names>0 and table.concat(names," / ") or "Gathering route"
+        local gathering=ns.IsGathering(slug) and ns.GatheringInfo(slug,step,ns.player)
+        local name=#names>0 and table.concat(names," / ") or (gathering and gathering.name or "Gathering route")
         local range=math.max(skill.rank,step.from).."-"..step.to..(i==1 and "  |  Current" or "")
         b.label:SetText((i==selected and GOLD or MUTED)..range.."|r\n"..name)
         local height=math.max(52,b.label:GetStringHeight()+18)
@@ -360,11 +361,76 @@ function ns.RenderCostCard(recipe,crafts,index,y,multiple)
     return y+height+14
 end
 
+function ns.RenderGathering(slug,skill,y)
+    local info=ns.GatheringInfo(slug,ns.selectedStep,ns.player)
+    if not info then return y end
+    ns.gatheringCards=ns.gatheringCards or {}
+    local function card(index,title)
+        local c=ns.gatheringCards[index]
+        if not c then
+            c=panel(ns.bodyFrame,0,0,546,70)
+            c.title=text(c,"GameFontNormal",522); c.title:SetPoint("TOPLEFT",12,-10)
+            c.body=text(c,"GameFontHighlight",522); c.rows={}
+            ns.gatheringCards[index]=c
+        end
+        c.title:SetText(title); c:ClearAllPoints(); c:SetPoint("TOPLEFT",0,-y)
+        c.body:Hide(); c:Show()
+        return c
+    end
+    local function finish(c,height) c:SetHeight(height); y=y+height+12 end
+    ns.recipeIcon:ClearAllPoints(); ns.recipeIcon:SetPoint("TOPLEFT",0,-y)
+    ns.recipeIcon:SetTexture(info.item and ns.ItemIcon(info.item) or ns.ProfessionIcon(slug)); ns.recipeIcon:Show()
+    y=math.max(y+46,place(ns.recipeText,info.name,56,y))+10
+    y=place(ns.detailText,MUTED..info.preparation.."|r",0,y)+16
+    local c=card(1,"Where to gather")
+    local rowY=34
+    for _,row in ipairs(c.rows) do row.label:Hide(); row.mapButton:Hide() end
+    for i,zone in ipairs(info.zones) do
+        local row=c.rows[i]
+        if not row then
+            row={label=text(c,"GameFontHighlight",390)}
+            row.mapButton=button(c,actionIcon("INV_Misc_Map_01","Open map"),112,422,0,function(self)
+                local _,message=ns.OpenGatheringMap(self.mapID)
+                ns.status=message; ns.statusText:SetText(message)
+            end)
+            c.rows[i]=row
+        end
+        place(row.label,zone.name,12,rowY+4); row.label:Show()
+        row.mapButton:ClearAllPoints(); row.mapButton:SetPoint("TOPLEFT",422,-rowY)
+        row.mapButton.mapID=zone.map; row.mapButton:SetShown(zone.map~=nil)
+        rowY=rowY+math.max(26,row.label:GetStringHeight()+8)+8
+    end
+    if #info.zones==0 then
+        c.body:Show(); rowY=place(c.body,"Detect your faction to show the appropriate starting area.",12,rowY)+8
+    end
+    finish(c,rowY+4)
+    c=card(2,"Unlocks & next step")
+    local milestones={}
+    for _,milestone in ipairs(info.milestones) do
+        local remaining=milestone.skill-skill.rank
+        milestones[#milestones+1]=milestone.name.." - skill "..milestone.skill.."  "..
+            (remaining>0 and (MUTED.."("..remaining.." more skill)|r") or (GREEN.."Available now|r"))
+    end
+    if info.nextStep then milestones[#milestones+1]="Next route: "..info.nextStep.name.." at skill "..info.nextStep.skill
+    else milestones[#milestones+1]="This is the final source route band." end
+    if skill.cap<ns.selectedStep.to then milestones[#milestones+1]=GOLD.."Train the next rank to progress beyond "..skill.cap..".|r" end
+    if ns.plan then milestones[#milestones+1]=MUTED.."Your target: "..ns.plan.target..". Skill-up counts depend on gathering results.|r" end
+    c.body:Show(); finish(c,place(c.body,table.concat(milestones,"\n"),12,34)+12)
+    c=card(3,"In the field")
+    c.body:Show(); finish(c,place(c.body,info.action or "Follow the selected gathering activity.",12,34)+12)
+    ns.warningText:SetText("")
+    local warnings={}
+    if ns.plan then for _,w in ipairs(ns.plan.warnings) do warnings[#warnings+1]=w end end
+    if #warnings>0 then y=place(ns.warningText,"|cffffbf69"..table.concat(warnings,"\n").."|r",0,y)+12 end
+    return y
+end
+
 function ns.RenderRecipe(slug,skill)
     local step=ns.selectedStep
     local label=step and (math.max(skill.rank,step.from).."-"..step.to) or "Route complete"
     local y=place(ns.stepHeading,GOLD..label..(ns.route[1]==step and step and "  |  Current step" or "").."|r",0,0)+14
     y=ns.RenderChoices(slug,step,y)
+    if step and ns.IsGathering(slug) then return ns.RenderGathering(slug,skill,y) end
     ns.recipeIcon:ClearAllPoints(); ns.recipeIcon:SetPoint("TOPLEFT",0,-y)
     local recipes=step and step.recipes or {}
     local title,details,costs={},{},{}
@@ -591,6 +657,7 @@ function ns.Render(resetInput)
     for _,v in ipairs(ns.tableHead) do v.label:Hide() end
     for _,v in ipairs(ns.materialRows) do v:Hide() end
     for _,card in ipairs(ns.costCards) do card:Hide() end
+    for _,card in ipairs(ns.gatheringCards or {}) do card:Hide() end
     ns.notesText:Hide()
     if ns.trainingHeader then ns.trainingHeader:Hide() end
     for _,key in ipairs({"trainingNext","trainingDirectory","trainingHelpButton","trainingReference","trainingSource"}) do
@@ -600,7 +667,10 @@ function ns.Render(resetInput)
     local height=480
     if skill and not ns.showNotes then
         for _,v in ipairs(content) do v:Show() end
-        height=ns.RenderMaterials(ns.RenderRecipe(slug,skill))
+        height=ns.RenderRecipe(slug,skill)
+        if ns.IsGathering(slug) then
+            ns.shoppingTitle:Hide(); ns.materialMessage:Hide()
+        else height=ns.RenderMaterials(height) end
     else
         if skill then height=ns.RenderTrainingNotes(slug,skill)
         else
@@ -613,6 +683,8 @@ function ns.Render(resetInput)
     ns.notesButton:SetText(actionIcon("INV_Misc_Book_09",ns.showNotes and "Back to workshop" or "Training & notes"))
     local canExport, exportStatus = ns.CanExport()
     ns.exportButton:SetEnabled(canExport and ns.plan~=nil and #ns.plan.materials>0)
-    ns.statusText:SetText(ns.status or (canExport and "ItemFarmingTool connected. Export only when you click. Existing higher goals are preserved." or exportStatus))
+    ns.exportButton:SetShown(not ns.IsGathering(slug))
+    ns.statusText:SetText(ns.status or (ns.IsGathering(slug) and "Follow the selected gathering band. Zone maps do not mark exact nodes."
+        or (canExport and "ItemFarmingTool connected. Export only when you click. Existing higher goals are preserved." or exportStatus)))
     if ns.db.hidden then ns.frame:Hide() else ns.frame:Show() end
 end

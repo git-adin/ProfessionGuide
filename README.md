@@ -1,4 +1,4 @@
-# ProfessionGuide 0.5.5
+# ProfessionGuide 0.6.0
 
 An independent WoW Forever addon (Interface 16001) with character-aware profession
 routes and optional, explicit exports to ItemFarmingTool. No addon dependency,
@@ -61,6 +61,19 @@ generic logo for legacy recipe spell IDs.
 | `/pg minimap` | Toggle minimap button visibility |
 | `/pg minimap show` / `/pg minimap hide` | Show / hide minimap button |
 | `/pg minimap reset` | Restore minimap button position and show it |
+
+## Gathering routes
+
+Mining, Herbalism, Skinning, Fishing and Lockpicking have a dedicated activity
+view. Route steps name the ore, herbs, creatures or locks. The selected band shows
+where to go, upcoming unlocks, the following route band and field instructions.
+Zone suggestions appear even without a target, follow your faction where relevant,
+and offer **Open map** for mapped zones. These buttons open zone maps, not exact
+node pins or farming paths. Maps are not opened during combat.
+
+The empty shopping list and crafting cost section are hidden for these activities.
+An optional target limits the displayed route without inventing item quantities,
+craft counts or farming goals. No other addon is needed for the gathering view.
 
 ## Training & trainer pins
 
@@ -140,7 +153,7 @@ ItemFarmingTool automatically.
 ## Estimates and limitations
 
 The bundled factual route snapshot comes from [WoW-Professions.com's Forever
-guides](https://www.wow-professions.com/forever), refreshed November 25, 2026.
+guides](https://www.wow-professions.com/forever), refreshed November 26, 2026.
 Instructions are condensed and rewritten; this is not the full website, its maps,
 or every informal recipe suggestion. See [SOURCES.md](SOURCES.md).
 

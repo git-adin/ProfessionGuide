@@ -1,6 +1,6 @@
 # Source provenance
 
-Snapshot date: **2026-11-25**. Recipe names, skill ranges, estimated craft counts,
+Snapshot date: **2026-11-26**. Recipe names, skill ranges, estimated craft counts,
 ingredient quantities and location facts were checked against the pages below.
 Guide prose and maps are not bundled. UI instructions are original summaries.
 Upstream guides describe beta-derived and untested higher-level content; the
@@ -83,10 +83,19 @@ Coarse Grinding Stones needed for the gauntlets. The source also lists rare
 Blessed Plate plans without complete per-step craft estimates. The Enchanting
 page removed a character-level claim and its compiled recipe route is unchanged.
 
+## November 26 guide review
+
+The Engineering route now uses 61 Solid Blasting Powder crafts from 175–193,
+followed by the Gyromatic Micro-Adjustor and three Iron Grenades. The
+[Forever client recipe for spell 12585](https://kfcguild.online/tools/forever/encyclopedia/recipes/12585)
+records one powder from two Solid Stone. Thorium Widget and Thorium Tube
+have separate skill ranges. Blacksmithing revises grinding stone estimates
+and adds Golden Scale Bracers from 185–195. First Aid updates its Runecloth
+Bandage estimate.
+
 ## November 25 recipe review
 
-Solid Blasting Powder produces two per craft, which reduces the purchased
-materials needed by later Engineering steps. Kor'gar in Riverglades also
+Kor'gar in Riverglades also
 sells the Thorium Tube schematic. Leatherworking can use all Guardian
 Gloves or all Barbaric Harnesses through 165-185. The Wizardweave Turban
 alternate now includes its Rune Thread.

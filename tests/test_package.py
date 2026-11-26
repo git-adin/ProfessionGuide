@@ -31,6 +31,7 @@ EXPECTED = {'Character.lua',
  'SOURCES.md',
  'UI.lua'}
 EXPECTED.add('Trainers.lua')
+EXPECTED.add('Gathering.lua')
 
 sys.path.insert(0, str(ROOT / "tools"))
 from package import build

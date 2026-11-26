@@ -6,7 +6,7 @@ sys.path.insert(0,str(ROOT.parent/'.tools'))
 sys.path.insert(0,str(ROOT/'.tools'))
 from lupa.lua51 import LuaRuntime
 
-FILES=['Data.lua','Routes.lua','Character.lua','Icons.lua','Choices.lua','Planner.lua','Favorites.lua','Pricing.lua','Trainers.lua','Integration.lua','UI.lua','Minimap.lua','ProfessionButton.lua','Core.lua']
+FILES=['Data.lua','Routes.lua','Character.lua','Icons.lua','Choices.lua','Gathering.lua','Planner.lua','Favorites.lua','Pricing.lua','Trainers.lua','Integration.lua','UI.lua','Minimap.lua','ProfessionButton.lua','Core.lua']
 
 class AddonTests(unittest.TestCase):
     def setUp(self):
@@ -405,6 +405,79 @@ class AddonTests(unittest.TestCase):
             tiers[2841]=nil; c=ns.CraftCost(r,3)
             assert(#c.missingLow==1 and c.shortages['Bronze Bar'].found==0)''')
 
+    def test_gathering_view_without_target_then_planned_and_hidden(self):
+        self.check('''skills={{skillID=186,name='Mining',rank=208,maxRank=300}}; ns.Refresh()
+            ns.player.faction='Horde'; ns.Command('show')
+            assert(ns.plan==nil and ns.recipeText:GetText()=='Mithril')
+            assert(ns.routeButtons[1].label:GetText():find('Mithril'))
+            assert(not ns.shoppingTitle:IsShown() and not ns.materialMessage:IsShown())
+            assert(ns.gatheringCards[1].rows[1].label:GetText()=='Tanaris')
+            assert(ns.gatheringCards[1].rows[2].label:GetText()=='The Hinterlands')
+            assert(ns.gatheringCards[2].body:GetText():find('Truesilver') and ns.gatheringCards[2].body:GetText():find('22 more skill'))
+            ns.SetTarget(220); ns.Render()
+            assert(ns.plan.steps[1].from==208 and ns.plan.steps[1].to==220)
+            assert(ns.gatheringCards[1].rows[1].label:GetText()=='Tanaris')
+            assert(not ns.exportButton.enabled and next(ns.db.exports)==nil)
+            ns.showNotes=true; ns.Render(); assert(not ns.gatheringCards[1]:IsShown())
+            skills={{skillID=171,name='Alchemy',rank=1,maxRank=75}}; ns.Refresh()
+            assert(not ns.gatheringCards[1]:IsShown() and ns.shoppingTitle:IsShown())''')
+
+    def test_gathering_faction_maps_and_all_band_metadata(self):
+        self.check('''for _,slug in ipairs({'mining','herbalism','skinning','fishing','lockpicking'}) do
+                for _,step in ipairs(ns.GetGuideSteps(slug)) do
+                    local info=ns.GatheringInfo(slug,step,ns.player)
+                    assert(info and info.name~='Gathering activity' and info.preparation and info.action)
+                end
+            end
+            local step=ns.GetGuideSteps('mining')[1]
+            assert(ns.GatheringInfo('mining',step,{faction='Horde'}).zones[1].name=='Durotar')
+            assert(ns.GatheringInfo('mining',step,{faction='Alliance'}).zones[1].name=='Elwynn Forest')
+            assert(#ns.GatheringInfo('mining',step,{}).zones==0)
+            local opened
+            C_Map={GetMapInfo=function(id) if id==1446 then return {name='Tanaris'} end end,
+                OpenWorldMap=function(id) opened=id end,
+                SetUserWaypoint=function() error('Gathering maps must not invent a node waypoint') end}
+            assert(ns.OpenGatheringMap(1446) and opened==1446)
+            opened=nil; InCombatLockdown=function() return true end
+            assert(not ns.OpenGatheringMap(1446) and opened==nil)
+            InCombatLockdown=function() return false end
+            assert(not ns.OpenGatheringMap(99999))''')
+
+    def test_all_gathering_professions_render_every_band_with_and_without_targets(self):
+        self.check('''local checked=0
+            for _,slug in ipairs({'mining','herbalism','skinning','fishing','lockpicking'}) do
+                for _,band in ipairs(ns.GetGuideSteps(slug)) do
+                    for _,faction in ipairs({'Alliance','Horde',false}) do
+                        skills={{skillID=ns.Professions[slug].id,name=ns.Professions[slug].name,rank=band.from,maxRank=300}}
+                        level=60; ns.db.targets[slug]=nil; ns.Refresh()
+                        ns.db.hidden=false; ns.player.faction=faction or nil; ns.Render()
+                        local info=ns.GatheringInfo(slug,ns.selectedStep,ns.player)
+                        assert(info and ns.recipeText:GetText()==info.name)
+                        assert(ns.routeButtons[1].label:GetText():find(info.name,1,true))
+                        assert(ns.gatheringCards[1]:IsShown() and ns.gatheringCards[2]:IsShown() and ns.gatheringCards[3]:IsShown())
+                        assert(not ns.shoppingTitle:IsShown() and not ns.materialMessage:IsShown())
+                        assert(not ns.exportButton:IsShown() and not ns.exportButton.enabled)
+                        for i,zone in ipairs(info.zones) do
+                            local row=ns.gatheringCards[1].rows[i]
+                            assert(row.label:GetText()==zone.name)
+                            assert(row.mapButton:IsShown()==(zone.map~=nil))
+                            if zone.map then assert(row.mapButton.mapID==zone.map) end
+                        end
+                        for _,card in ipairs(ns.costCards) do assert(not card:IsShown()) end
+                        for _,row in ipairs(ns.materialRows) do assert(not row:IsShown()) end
+                        ns.targetInput:SetText(tostring(band.to)); ns.applyButton:GetScript('OnClick')()
+                        assert(ns.plan and ns.plan.slug==slug and #ns.plan.materials==0)
+                        assert(ns.selectedStep.from==band.from and ns.selectedStep.to==band.to)
+                        assert(ns.recipeText:GetText()==info.name and ns.gatheringCards[1]:IsShown())
+                        assert(not ns.shoppingTitle:IsShown() and not ns.exportButton:IsShown())
+                        assert(next(ns.db.exports)==nil)
+                        checked=checked+1
+                    end
+                end
+            end
+            assert(checked==81)
+            gatheringViewCases=checked*2''')
+
     def test_no_target_no_plan_or_export(self):
         self.check('''assert(ns.plan==nil and next(ns.db.targets)==nil)
             assert(not ns.frame:IsShown()); ns.Command('show'); assert(ns.frame:IsShown())
@@ -633,9 +706,9 @@ class AddonTests(unittest.TestCase):
             assert(ns.costCards[2].title:GetText()=='Whirring Bronze Gizmo')
             skills={{skillID=186,name='Mining',rank=125,maxRank=150}}; ns.Refresh()
             ns.SetTarget(175); ns.Render()
-            assert(ns.recipeText:GetText()=='Gathering route')
+            assert(ns.recipeText:GetText()=='Iron & Gold')
             assert(not ns.costCards[1]:IsShown() and not ns.costCards[2]:IsShown())
-            assert(ns.detailText:GetText():find('Thousand Needles'))
+            assert(ns.gatheringCards[1].rows[1].label:GetText()=='Thousand Needles')
             assert(#ns.plan.materials==0 and not ns.exportButton.enabled)''')
 
     def test_workshop_complete_and_source_end_states(self):
@@ -700,7 +773,7 @@ class AddonTests(unittest.TestCase):
             ns.Render(); assert(ns.detailText:GetText():find('|T'))
             for i,m in ipairs(ns.plan.materials) do assert(ns.materialRows[i].icon.texture==m.id+100000) end
             skills={{skillID=186,name='Mining',rank=1,maxRank=75}}; ns.Refresh()
-            assert(ns.recipeIcon.texture==ns.ProfessionIcon('mining'))
+            assert(ns.recipeIcon.texture==ns.ItemIcon(2770))
             assert(not tostring(ns.recipeIcon.texture):find('QuestionMark'))''')
 
     def test_recipe_art_overrides_valid_placeholder_spell_texture(self):
@@ -942,18 +1015,18 @@ class AddonTests(unittest.TestCase):
             mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
             assert(mats['Linen Cloth']==nil)''')
 
-    def test_november25_recipe_yield_and_alternates(self):
+    def test_solid_blasting_powder_yield_and_alternates(self):
         self.check('''local player={level=60,faction='Alliance',professions={
                 engineering={rank=175,cap=300},leatherworking={rank=165,cap=225},
                 tailoring={rank=280,cap=300}}}
             local plan=assert(ns.Plan('engineering',player,250,{}))
             local r=plan.steps[1].recipes[1]
-            assert(r.name=='Solid Blasting Powder' and r.crafts==31)
+            assert(r.name=='Solid Blasting Powder' and r.crafts==61)
             local solidStone
             for _,m in ipairs(plan.materials) do
                 if m.name=='Solid Stone' then solidStone=m.quantity end
             end
-            assert(solidStone==62)
+            assert(solidStone==122)
             plan=assert(ns.Plan('leatherworking',player,185,{guardians='gloves'}))
             assert(#plan.steps==1 and plan.steps[1].recipes[1].crafts==20)
             plan=assert(ns.Plan('leatherworking',player,185,{guardians='harness'}))
@@ -963,7 +1036,7 @@ class AddonTests(unittest.TestCase):
             assert(mats['Rune Thread']==58)''')
 
     def test_current_source_routes_and_oil_yield(self):
-        self.check('''assert(ns.SourceDate=='2026-11-25')
+        self.check('''assert(ns.SourceDate=='2026-11-26')
             skills={{skillID=171,name='Alchemy',rank=250,maxRank=300}}; ns.Refresh()
             ns.SetTarget(300); ns.Render()
             assert(ns.plan.steps[1].recipes[1].name=='Stonescale Oil')
@@ -1089,10 +1162,10 @@ class AddonTests(unittest.TestCase):
             mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
             assert(mats['Rough Stone']==56 and mats['Copper Bar']==62 and mats['Linen Cloth']==28)
             assert(mats['Rough Blasting Powder']==nil and mats['Handful of Copper Bolts']==nil)
-            skills[1].rank=190; ns.Refresh(); ns.SetTarget(195); ns.Render()
+            skills[1].rank=193; ns.Refresh(); ns.SetTarget(195); ns.Render()
             local recipes=ns.plan.steps[1].recipes
             assert(#recipes==2 and recipes[1].name=='Gyromatic Micro-Adjustor')
-            assert(recipes[2].name=='Iron Grenade' and recipes[2].crafts==10)
+            assert(recipes[2].name=='Iron Grenade' and recipes[2].crafts==3)
             skills[1].rank=250; ns.Refresh(); ns.SetTarget(260); ns.Render()
             assert(ns.plan.steps[1].recipes[1].crafts==44 and ns.plan.materials[1].quantity==88)''')
 

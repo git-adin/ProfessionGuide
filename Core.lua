@@ -68,6 +68,7 @@ function ns.SetTarget(value)
     local target=ns.Integer(value,1,300)
     if not target then return false,"Target must be a whole number from 1 to 300." end
     ns.db.targets[slug]=target
+    if ns.IsGathering(slug) then return true,"Target saved. Gathering route updated." end
     return true,"Target saved. Review materials, then click Export if desired."
 end
 function ns.Toggle()
