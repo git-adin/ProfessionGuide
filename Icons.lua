@@ -57,6 +57,10 @@ function ns.IconTag(icon,size)
     return "|T"..tostring(icon)..":"..(size or 16)..":"..(size or 16)..":0:0|t "
 end
 function ns.StepIcon(slug,step)
+    if ns.IsGathering and ns.IsGathering(slug) then
+        local info=ns.GatheringInfo(slug,step,ns.player)
+        if info and info.item then return ns.ItemIcon(info.item) or ns.ProfessionIcon(slug) end
+    end
     for _,s in ipairs(ns.GetGuideSteps(slug)) do
         if s.from<=step.from and s.to>=step.to then
             for _,r in ipairs(s.recipes or {}) do

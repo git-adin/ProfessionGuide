@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 ROOT = Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--cache-dir',type=Path,default=ROOT/'tools/.source-cache')
-parser.add_argument('--source-date',default='2026-11-25')
+parser.add_argument('--source-date',default='2026-11-26')
 args=parser.parse_args()
 SLUGS = ['alchemy','blacksmithing','enchanting','engineering','leatherworking','tailoring','first-aid','cooking']
 items, spells, recipe_icons = {}, {}, {}
@@ -39,6 +39,8 @@ for slug in SLUGS:
             image=a.find('img',src=True)
             icon=re.search(r'/([^/]+)\.(?:jpg|png)$',image['src']) if image else None
             if icon: recipe_icons[int(m[1])]='Interface\\Icons\\'+icon[1]
+spells.setdefault('Runed Copper Belt', 2666)  # Retained Blacksmithing alternate.
+recipe_icons.setdefault(2666, r'Interface\Icons\inv_belt_03')
 items.update({'Coarse Thread':2320,'Fine Thread':2321,'Silken Thread':4291,
     'Heavy Silken Thread':8343,'Rune Thread':14341,'Red Dye':2604,'Blue Dye':6260,
     'Green Dye':2605,'Black Dye':2325,'Salt':4289,'Refreshing Spring Water':159,
@@ -62,7 +64,7 @@ def recipe(text):
         amount, material = x.groups()
         material = re.sub(r'\s*\(.*', '', material).rstrip('.')
         mats.append({'name':material,'quantity':int(amount)/int(count)})
-    return {'name':name,'spell':spells.get(name,0),'crafts':int(count),'materials':mats,'yield':2 if name in ('Fire Oil','Stonescale Oil','Solid Blasting Powder') else 1}
+    return {'name':name,'spell':spells.get(name,0),'crafts':int(count),'materials':mats,'yield':2 if name in ('Fire Oil','Stonescale Oil') else 1}
 
 guides = {}
 for slug,soup in soups.items():
@@ -94,7 +96,7 @@ for slug,soup in soups.items():
                 seen.add((lo,hi))
                 continue
         if r is None:
-            # Nested choices: choose one, except Engineering 135-150 needs both.
+            # Nested choices: choose one, except where Engineering requires both recipes.
             nested=li.find(['ul','ol'])
             choices=[recipe(' '.join(c.get_text(' ',strip=True).split())) for c in nested.find_all('li',recursive=False)] if nested else []
             choices=[c for c in choices if c]
@@ -104,7 +106,7 @@ for slug,soup in soups.items():
                 r=recipe(cells[1].get_text(' ',strip=True)+' - '+materials)
                 choices=[r] if r else []
             if not choices: raise ValueError((slug,lo,'No recipe'))
-            chosen=choices if slug=='engineering' and lo in (135,190) else choices[:1]
+            chosen=choices if slug=='engineering' and lo in (135,193) else choices[:1]
         else: chosen=[r]
         steps.append({'from':lo,'to':hi,'recipes':chosen})
         seen.add((lo,hi))
@@ -176,7 +178,7 @@ reviewed_notes={
     ('blacksmithing',125):'Silvered Bronze Gauntlets require 30 Coarse Grinding Stones. Use any you have left or make the rest before crafting the gauntlets.',
     ('blacksmithing',270):'Radiant Boots and Radiant Leggings require world-drop plans. Compare the other finishing routes if the plans are unavailable or expensive.',
     ('engineering',260):'Buy Schematic: Thorium Widget from Sovik (Orgrimmar) or Gearcutter Cogspinner (Ironforge).',
-    ('engineering',280):'Buy the bind-on-pickup Thorium Tube schematic from Xizzer Fizzbolt in Everlook or Kor\'gar in Riverglades on this character.',
+    ('engineering',286):'Buy the bind-on-pickup Thorium Tube schematic from Xizzer Fizzbolt in Everlook or Kor\'gar in Riverglades on this character.',
     ('tailoring',200):'These shoulders require an Artisan trainer; the Expert trainers do not teach them.',
     ('tailoring',240):'Runecloth Gloves pattern: Qia, Winterspring.',
     ('tailoring',250):'Runecloth Cuffs pattern: Pexmit, Mount Hyjal (bind on pickup). Optional Horde quest source: Threading a Solution from Kal\'tinzan, Elderwild, Mount Hyjal; level 54 and 6 Bolt of Runecloth. Quest skill requirement is unverified.',
