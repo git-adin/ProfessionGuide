@@ -209,7 +209,8 @@ class AddonTests(unittest.TestCase):
     def test_actual_auctionpricelite_public_api(self):
         source=ROOT.parent/'checkouts/AuctionPriceLite/AuctionPriceLite/Core.lua'
         if not source.exists(): self.skipTest('Optional AuctionPriceLite checkout unavailable')
-        self.check('''GetCurrentRegion=function() return 1 end
+        self.check('''C_AuctionHouse={ReplicateItems=function() end}
+            GetCurrentRegion=function() return 1 end
             C_GameRules={GetCurrentGameModeRecordID=function() return 15 end}
             Enum.TooltipDataType={Item=0}
             TooltipDataProcessor={AddTooltipPostCall=function() end}
@@ -1036,7 +1037,7 @@ class AddonTests(unittest.TestCase):
             assert(mats['Rune Thread']==58)''')
 
     def test_current_source_routes_and_oil_yield(self):
-        self.check('''assert(ns.SourceDate=='2026-11-26')
+        self.check('''assert(ns.SourceDate=='2026-11-27')
             skills={{skillID=171,name='Alchemy',rank=250,maxRank=300}}; ns.Refresh()
             ns.SetTarget(300); ns.Render()
             assert(ns.plan.steps[1].recipes[1].name=='Stonescale Oil')

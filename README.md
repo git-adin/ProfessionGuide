@@ -1,4 +1,4 @@
-# ProfessionGuide 0.6.0
+# ProfessionGuide 0.6.1
 
 An independent WoW Forever addon (Interface 16001) with character-aware profession
 routes and optional, explicit exports to ItemFarmingTool. No addon dependency,
@@ -153,7 +153,7 @@ ItemFarmingTool automatically.
 ## Estimates and limitations
 
 The bundled factual route snapshot comes from [WoW-Professions.com's Forever
-guides](https://www.wow-professions.com/forever), refreshed November 26, 2026.
+guides](https://www.wow-professions.com/forever), refreshed November 27, 2026.
 Instructions are condensed and rewritten; this is not the full website, its maps,
 or every informal recipe suggestion. See [SOURCES.md](SOURCES.md).
 

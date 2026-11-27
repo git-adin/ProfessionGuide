@@ -49,6 +49,12 @@ ns.Trainers={
     fishing={
         t("Expert book","Old Man Heming","Booty Bay, Stranglethorn Vale",nil,1434,27.4,77.1,"Skill 125, level 20."),
         t("Artisan quest","Nat Pagle","Dustwallow Marsh",nil,1445,58.6,60.1,"Nat Pagle's Angler Extreme: skill 225, level 35.")},
+    skinning={
+        t("Full trainer","Dranh","Camp Taurajo, The Barrens","Horde",1413,45.0,59.0),
+        t("Full trainer","Malux","Shadowprey Village, Desolace","Horde",1443,23.3,69.8),
+        t("Full trainer","Kulleg Stonehorn","Camp Mojache, Feralas","Horde",1444,74.5,43.0),
+        t("Full trainer","Jayla","Silverwind Refuge, Ashenvale","Alliance",1440,49.9,67.2),
+        t("Full trainer","Wilma Ranthal","Lakeshire, Redridge Mountains","Alliance",1433,83.6,71.2)},
     herbalism={t("Full trainer","Reyna Stonebranch","Ironforge","Alliance",1455,55.6,59.1)},
 }
 ns.TrainingTips={

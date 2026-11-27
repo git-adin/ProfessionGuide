@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 ROOT = Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--cache-dir',type=Path,default=ROOT/'tools/.source-cache')
-parser.add_argument('--source-date',default='2026-11-26')
+parser.add_argument('--source-date',default='2026-11-27')
 args=parser.parse_args()
 SLUGS = ['alchemy','blacksmithing','enchanting','engineering','leatherworking','tailoring','first-aid','cooking']
 items, spells, recipe_icons = {}, {}, {}
@@ -39,8 +39,6 @@ for slug in SLUGS:
             image=a.find('img',src=True)
             icon=re.search(r'/([^/]+)\.(?:jpg|png)$',image['src']) if image else None
             if icon: recipe_icons[int(m[1])]='Interface\\Icons\\'+icon[1]
-spells.setdefault('Runed Copper Belt', 2666)  # Retained Blacksmithing alternate.
-recipe_icons.setdefault(2666, r'Interface\Icons\inv_belt_03')
 items.update({'Coarse Thread':2320,'Fine Thread':2321,'Silken Thread':4291,
     'Heavy Silken Thread':8343,'Rune Thread':14341,'Red Dye':2604,'Blue Dye':6260,
     'Green Dye':2605,'Black Dye':2325,'Salt':4289,'Refreshing Spring Water':159,
@@ -175,7 +173,7 @@ for slug,soup in soups.items():
 from alternate_routes import build as build_alternates
 alternates=build_alternates(guides,soups,recipe,items)
 reviewed_notes={
-    ('blacksmithing',125):'Silvered Bronze Gauntlets require 30 Coarse Grinding Stones. Use any you have left or make the rest before crafting the gauntlets.',
+    ('blacksmithing',125):'Silvered Bronze Gauntlets require 30 Coarse Grinding Stones. Use the stones kept from 75–84, or make any you are missing.',
     ('blacksmithing',270):'Radiant Boots and Radiant Leggings require world-drop plans. Compare the other finishing routes if the plans are unavailable or expensive.',
     ('engineering',260):'Buy Schematic: Thorium Widget from Sovik (Orgrimmar) or Gearcutter Cogspinner (Ironforge).',
     ('engineering',286):'Buy the bind-on-pickup Thorium Tube schematic from Xizzer Fizzbolt in Everlook or Kor\'gar in Riverglades on this character.',
