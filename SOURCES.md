@@ -1,6 +1,6 @@
 # Source provenance
 
-Snapshot date: **2026-11-26**. Recipe names, skill ranges, estimated craft counts,
+Snapshot date: **2026-11-27**. Recipe names, skill ranges, estimated craft counts,
 ingredient quantities and location facts were checked against the pages below.
 Guide prose and maps are not bundled. UI instructions are original summaries.
 Upstream guides describe beta-derived and untested higher-level content; the
@@ -28,7 +28,7 @@ requirements are calculated from the remaining steps and chosen target.
 
 Default branch policy: first continuous recipe branch, the active Strange Dust
 Enchanting tab, First Aid bandages at low skill and the first cooking-table option;
-both Engineering 135-150 and 190-195 crafts are required. Reviewed alternate branches
+both Engineering 135–150 and 193–195 crafts are required. Reviewed alternate branches
 are defined in `tools/alternate_routes.py`, including linked replacements. Cooking
 table options retain ingredient facts and vendor/quest locations, not guide prose.
 Sparse suggestions without verifiable ingredients are not compiled as recipes.
@@ -82,6 +82,18 @@ Blacksmithing 125–140 now defaults to 15 Silvered Bronze Gauntlets, with
 Coarse Grinding Stones needed for the gauntlets. The source also lists rare
 Blessed Plate plans without complete per-step craft estimates. The Enchanting
 page removed a character-level claim and its compiled recipe route is unchanged.
+
+## November 27 guide review
+
+Blacksmithing uses Rough Grinding Stone through 75, then Coarse Grinding
+Stone through 84. Its bracers and gauntlets use the coarse stones made
+earlier, and Golden Scale Bracers use the heavy stones made at 100–115.
+Cooking adds Filet of Redgill as an alternative to Nightfin Soup at 285–300.
+Five Skinning trainer locations were cross-checked in installed ForeverDB
+0.77.3. The installed snapshot labels Malux a Druid Trainer; both the guide
+and [Wowhead Forever](https://www.wowhead.com/forever/npc=12030/malux) list him
+as a Skinning Trainer. [Kelsey Yance](https://www.wowhead.com/forever/npc=2664/kelsey-yance)
+sells the Redgill recipe.
 
 ## November 26 guide review
 

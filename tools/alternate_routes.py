@@ -26,8 +26,6 @@ def build(guides, soups, recipe, items):
             s(250,265,'21x Elixir of Greater Intellect - 21 Blindweed, 21 Khadgar\'s Whisker, 21 Crystal Vial'),
             s(265,300,'55x Superior Mana Potion - 110 Sungrass, 110 Blindweed, 55 Crystal Vial'))],
           'Changes 250-300 together. Skip Stonescale Oil. Superior Mana recipe: Algernon (Undercity) or Ulthir (Darnassus).'))
-    add('blacksmithing','silver','Grinding stone or belt',[[75,80]],'Rough Grinding Stone',
-        o('belt','Runed Copper Belt',[b(75,80,s(75,80,'5x Runed Copper Belt - 50 Copper Bar'))]))
     add('blacksmithing','bronze','Bronze recipe',[[125,140]],'Silvered Bronze Gauntlets',
         o('warhammer','Bronze Warhammer',[b(125,140,s(125,140,'15x Bronze Warhammer - 120 Bronze Bar, 15 Strong Flux, 15 Medium Leather'))],
           'Buy Strong Flux from a Blacksmithing supply vendor.'))
@@ -184,6 +182,11 @@ def build(guides, soups, recipe, items):
             group['options'].append(o('catfish','Bristle Whisker Catfish',[b(150,175,
                 s(150,175,'90x Bristle Whisker Catfish - 90 Raw Bristle Whisker Catfish'))],
                 'Source estimates about 90; this recipe is green from 160.'))
+
+    add('cooking','recipe-285','Cooking recipe',[[285,300]],'Nightfin Soup',
+        o('redgill','Filet of Redgill',[b(285,300,
+            s(285,300,'69x Filet of Redgill - 69 Raw Redgill'))],
+            'Uses Raw Redgill. Buy the recipe from Kelsey Yance in Booty Bay.'))
 
     items.update({'Dense Grinding Stone':12644,'Iron Buckle':7071,'Cured Light Hide':4231,
         'Blue Power Crystal':11184,'Heart of Fire':7077,'Large Opal':12799,

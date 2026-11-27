@@ -133,7 +133,17 @@ function Fire(event, ...)
     end
 end
 function print(message) messages[#messages+1] = tostring(message) end
-function hooksecurefunc(name, callback) hooks[name] = callback end
+function hooksecurefunc(target, name, callback)
+    if type(target) == "table" then
+        local original = assert(target[name])
+        target[name] = function(...)
+            original(...)
+            callback(...)
+        end
+    else
+        hooks[target] = name
+    end
+end
 function HandleModifiedItemClick() end
 function IsShiftKeyDown() return shifted end
 function GetCursorInfo() return unpack(cursor or {}) end
