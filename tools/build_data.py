@@ -173,7 +173,7 @@ for slug,soup in soups.items():
 from alternate_routes import build as build_alternates
 alternates=build_alternates(guides,soups,recipe,items)
 reviewed_notes={
-    ('blacksmithing',125):'Silvered Bronze Gauntlets require 30 Coarse Grinding Stones. Use the stones kept from 75–84, or make any you are missing.',
+    ('blacksmithing',126):'Silvered Bronze Gauntlets require 28 Coarse Grinding Stones. Use the stones kept from 75–84, or make any you are missing.',
     ('blacksmithing',270):'Radiant Boots and Radiant Leggings require world-drop plans. Compare the other finishing routes if the plans are unavailable or expensive.',
     ('engineering',260):'Buy Schematic: Thorium Widget from Sovik (Orgrimmar) or Gearcutter Cogspinner (Ironforge).',
     ('engineering',286):'Buy the bind-on-pickup Thorium Tube schematic from Xizzer Fizzbolt in Everlook or Kor\'gar in Riverglades on this character.',

@@ -1,4 +1,4 @@
-# ProfessionGuide 0.6.1
+# ProfessionGuide 0.6.2
 
 An independent WoW Forever addon (Interface 16001) with character-aware profession
 routes and optional, explicit exports to ItemFarmingTool. No addon dependency,
