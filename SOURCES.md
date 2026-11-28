@@ -137,3 +137,12 @@ facts are included; no NPC database addon is required. Coordinates are approxima
 points, not walking routes. Contacts without coordinates, including Annora inside
 Uldaman and newer recipe vendors, remain text only. Map pins use the client's
 native `C_Map` waypoint API and are created only by clicking a trainer name.
+
+## Later November 27 source refresh
+
+Seven crafting guides changed their default steps or material counts. The
+Enchanting dust and essence routes now start at 21, and the Blacksmithing
+gauntlet and warhammer routes start at 126. Both alternatives take their
+skill ranges and craft counts from the source. Alchemy, Engineering,
+Leatherworking, Tailoring and First Aid also use updated skill ranges or
+counts. The source manifest records the exact fetched pages.

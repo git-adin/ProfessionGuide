@@ -21,13 +21,29 @@ def build(guides, soups, recipe, items):
         groups.setdefault(slug,[]).append({'id':key,'label':label,'ranges':ranges,
             'options':[option('default','Guide default: '+default,[])]+list(options)})
     s,b,o=step,block,option
+    def source_alternate(slug, default_name, alternate_name):
+        default = next(entry for entry in guides[slug]['steps']
+                       if entry['recipes'][0]['name'] == default_name)
+        lo, hi = default['from'], default['to']
+        for section in soups[slug].select('li.route-step'):
+            label = section.select_one('.route-range')
+            if not label or label.get_text(strip=True) != f'{lo}-{hi}':
+                continue
+            for link in section.find_all('a'):
+                if link.get_text(' ', strip=True) == alternate_name:
+                    parent = link.find_parent(['p', 'li'])
+                    if parent is not None and parent is not section:
+                        return default, s(lo,hi,parent.get_text(' ',strip=True))
+        raise ValueError(('Missing source alternate',slug,alternate_name,lo,hi))
     add('alchemy','finish','Oil or mana finishing path',[[250,300]],'Stonescale Oil, then Greater Defense',
         o('mana','Greater Intellect, then Superior Mana Potion',[b(250,300,
             s(250,265,'21x Elixir of Greater Intellect - 21 Blindweed, 21 Khadgar\'s Whisker, 21 Crystal Vial'),
             s(265,300,'55x Superior Mana Potion - 110 Sungrass, 110 Blindweed, 55 Crystal Vial'))],
           'Changes 250-300 together. Skip Stonescale Oil. Superior Mana recipe: Algernon (Undercity) or Ulthir (Darnassus).'))
-    add('blacksmithing','bronze','Bronze recipe',[[125,140]],'Silvered Bronze Gauntlets',
-        o('warhammer','Bronze Warhammer',[b(125,140,s(125,140,'15x Bronze Warhammer - 120 Bronze Bar, 15 Strong Flux, 15 Medium Leather'))],
+    bronze,warhammer=source_alternate('blacksmithing','Silvered Bronze Gauntlets','Bronze Warhammer')
+    bronze_start,bronze_end=bronze['from'],bronze['to']
+    add('blacksmithing','bronze','Bronze recipe',[[bronze_start,bronze_end]],'Silvered Bronze Gauntlets',
+        o('warhammer','Bronze Warhammer',[b(bronze_start,bronze_end,warhammer)],
           'Buy Strong Flux from a Blacksmithing supply vendor.'))
     add('blacksmithing','spurs','Mithril path',[[210,245]],'Heavy Mithril path',
         o('spurs','Mithril Spurs path (210-245)',[b(210,245,
@@ -73,15 +89,15 @@ def build(guides, soups, recipe, items):
             if not r: raise ValueError(('Enchanting tab',direct))
             dest.append({'from':int(match[1]),'to':int(match[2]),'recipes':[r]})
     base=guides['enchanting']['steps']
+    dust_start,essence_start=source_alternate('enchanting','Enchant Chest - Inferior Stamina','Enchant Bracer - Minor Deflect')
+    early_start=dust_start['from']
     guides['enchanting']['steps']=[x for x in base if x['to']<=70]+dust+[x for x in base if x['from']>=150]
-    essence_start=s(20,70,'50x Enchant Bracer - Minor Deflect - 50 Lesser Magic Essence')
     train=[x for x in essence if x['to']<=125]+[s(125,150,'25x Enchant Boots - Minor Stamina - 100 Strange Dust')]
     soul=dust[:-1]+[s(130,150,'20x Enchant Bracer - Lesser Stamina - 20 Soul Dust')]
-    dust_start=[x for x in base if x['from']==20][0]
-    add('enchanting','early-path','Dust or essence path',[[20,150]],'Strange Dust path',
-        o('essence','Lesser Magic Essence path',[b(20,150,essence_start,*essence)],'Lesser Intellect formula: Kithas, Nata Dawnstrider, Leo Sarn or Tilli Thistlefuzz.'),
-        o('essence-trainer','Essence start, then trainer recipes',[b(20,150,essence_start,*train)],'Uses trainer alternatives at 110-150 instead of buying Lesser Intellect.'),
-        o('soul','Strange Dust, then Soul Dust at 130',[b(20,150,dust_start,*soul)],'Changes the full 20-150 path together.'))
+    add('enchanting','early-path','Dust or essence path',[[early_start,150]],'Strange Dust path',
+        o('essence','Lesser Magic Essence path',[b(early_start,150,essence_start,*essence)],'Lesser Intellect formula: Kithas, Nata Dawnstrider, Leo Sarn or Tilli Thistlefuzz.'),
+        o('essence-trainer','Essence start, then trainer recipes',[b(early_start,150,essence_start,*train)],'Uses trainer alternatives at 110-150 instead of buying Lesser Intellect.'),
+        o('soul','Strange Dust, then Soul Dust at 130',[b(early_start,150,dust_start,*soul)],f'Changes the full {early_start}-150 path together.'))
     add('enchanting','agility-strength','Dust choice',[[165,200]],'Lesser Agility to 200',
         o('strength','Lesser Agility to 185, then Strength',[b(165,200,
             s(165,185,'22x Enchant Boots - Lesser Agility - 22 Soul Dust'),

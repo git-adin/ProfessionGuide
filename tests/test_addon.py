@@ -650,7 +650,7 @@ class AddonTests(unittest.TestCase):
             assert(#ift.db.items==total and ift.Find(2447).goal==100)''')
 
     def test_workshop_recipe_selection_keeps_full_route_totals(self):
-        self.check('''skills[1].rank=65; ns.Refresh(); ns.SetTarget(120); ns.Render()
+        self.check('''skills[1].rank=66; ns.Refresh(); ns.SetTarget(120); ns.Render()
             assert(#ns.route==2 and ns.recipeText:GetText()=='Elixir of Minor Fortitude')
             local count=#ns.plan.materials
             ns.routeButtons[2]:GetScript('OnClick')(ns.routeButtons[2])
@@ -765,7 +765,7 @@ class AddonTests(unittest.TestCase):
             assert(ns.ValidIcon(0)==nil and ns.ValidIcon('')==nil and ns.ValidIcon({})==nil)''')
 
     def test_workshop_icons_follow_recipe_and_profession(self):
-        self.check('''skills[1].rank=65; ns.Refresh(); ns.SetTarget(120); ns.Render()
+        self.check('''skills[1].rank=66; ns.Refresh(); ns.SetTarget(120); ns.Render()
             assert(ns.recipeIcon.texture==ns.RecipeIcons[2334])
             assert(ns.routeButtons[1].icon.texture==ns.recipeIcon.texture)
             ns.routeButtons[2]:GetScript('OnClick')(ns.routeButtons[2])
@@ -869,12 +869,12 @@ class AddonTests(unittest.TestCase):
             ns.compareButton:GetScript('OnClick')(); assert(not ns.compareText:IsShown())''')
 
     def test_enchanting_consistent_paths_and_minimum_estimate(self):
-        self.check('''skills={{skillID=333,name='Enchanting',rank=20,maxRank=150}}; ns.Refresh()
+        self.check('''skills={{skillID=333,name='Enchanting',rank=21,maxRank=150}}; ns.Refresh()
             ns.SetTarget(150); ns.Render()
             local defaults=ns.GetGuideSteps('enchanting')
             assert(defaults[4].recipes[1].name=='Enchant Chest - Inferior Stamina')
             assert(ns.SetChoice('enchanting','early-path','essence')); ns.Render()
-            assert(ns.plan.steps[1].recipes[1].name=='Enchant Bracer - Minor Deflect')
+            assert(ns.plan.steps[1].recipes[1].name=='Enchant Bracer - Minor Deflect' and ns.plan.steps[1].recipes[1].crafts==49)
             assert(ns.plan.steps[#ns.plan.steps].recipes[1].name=='Enchant 2H Weapon - Lesser Intellect')
             ns.SetChoice('enchanting','early-path','essence-trainer'); ns.Render()
             assert(ns.plan.steps[#ns.plan.steps].recipes[1].name=='Enchant Boots - Minor Stamina')
@@ -1074,8 +1074,8 @@ class AddonTests(unittest.TestCase):
             assert(ns.plan.steps[1].recipes[1].name=='Major Healing Potion')
             assert(ns.warningText:GetText():find('Pexmit'))''')
 
-    def test_blacksmithing_125_routes_plan_the_correct_materials(self):
-        self.check('''skills={{skillID=164,name='Blacksmithing',rank=125,maxRank=150}}; ns.Refresh()
+    def test_blacksmithing_126_routes_plan_the_correct_materials(self):
+        self.check('''skills={{skillID=164,name='Blacksmithing',rank=126,maxRank=150}}; ns.Refresh()
             local function plan(choice)
                 local result=ns.Plan('blacksmithing',ns.player,140,{bronze=choice})
                 local materials={}
@@ -1083,11 +1083,11 @@ class AddonTests(unittest.TestCase):
                 return result.steps[1].recipes[1],materials
             end
             local recipe,materials=plan('default')
-            assert(recipe.name=='Silvered Bronze Gauntlets' and recipe.crafts==15)
-            assert(materials['Bronze Bar']==120 and materials['Silver Bar']==15 and materials['Coarse Stone']==60)
+            assert(recipe.name=='Silvered Bronze Gauntlets' and recipe.crafts==14)
+            assert(materials['Bronze Bar']==112 and materials['Silver Bar']==14 and materials['Coarse Stone']==56)
             recipe,materials=plan('warhammer')
-            assert(recipe.name=='Bronze Warhammer' and recipe.crafts==15)
-            assert(materials['Bronze Bar']==120 and materials['Strong Flux']==15 and materials['Medium Leather']==15)
+            assert(recipe.name=='Bronze Warhammer' and recipe.crafts==14)
+            assert(materials['Bronze Bar']==112 and materials['Strong Flux']==14 and materials['Medium Leather']==14)
             assert(materials['Coarse Stone']==nil and materials['Silver Bar']==nil)''')
 
     def test_source_refresh_retires_only_removed_saved_choices(self):
@@ -1152,12 +1152,12 @@ class AddonTests(unittest.TestCase):
             assert(ns.db.choices.alchemy['oil-mana']==nil and ns.db.choices.alchemy.finish=='mana')
             assert(ns.status:find('Retired'))''')
 
-    def test_november18_craft_count_corrections(self):
-        self.check('''skills={{skillID=171,name='Alchemy',rank=65,maxRank=150}}; ns.Refresh()
+    def test_alchemy_and_engineering_craft_counts(self):
+        self.check('''skills={{skillID=171,name='Alchemy',rank=66,maxRank=150}}; ns.Refresh()
             ns.SetTarget(90); ns.Render()
-            assert(ns.plan.steps[1].recipes[1].crafts==28)
+            assert(ns.plan.steps[1].recipes[1].crafts==27)
             local mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
-            assert(mats.Earthroot==56 and mats.Peacebloom==28)
+            assert(mats.Earthroot==54 and mats.Peacebloom==27)
             skills={{skillID=202,name='Engineering',rank=1,maxRank=150}}; ns.Refresh()
             ns.SetTarget(75); ns.Render()
             mats={}; for _,m in ipairs(ns.plan.materials) do mats[m.name]=m.quantity end
@@ -1183,7 +1183,7 @@ class AddonTests(unittest.TestCase):
             assert(mats['Spider Ichor']==54 and mats['Bottle of Dalaran Noir']==54)
             assert(mats.Bruiseweed==31 and mats['Hot Spices']==31 and mats['Wool Cloth']==nil)
             ns.SetChoice('first-aid','journeyman','default'); ns.Render()
-            assert(ns.plan.steps[1].recipes[1].crafts==40 and ns.plan.steps[2].recipes[1].crafts==51)''')
+            assert(ns.plan.steps[1].recipes[1].crafts==43 and ns.plan.steps[2].recipes[1].crafts==54)''')
 
     def test_imperial_unlock_and_early_leather_alternate(self):
         self.check('''skills={{skillID=164,name='Blacksmithing',rank=240,maxRank=300}}; ns.Refresh()

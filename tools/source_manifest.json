@@ -2,79 +2,66 @@
   "alchemy": {
     "url": "https://www.wow-professions.com/forever/alchemy-leveling-guide",
     "checked": "2026-11-27",
-    "sha256": "63a5c07b286b205a6ebee14d96834cd8d324124ef0fb22a24cfc9b5395538fe1",
-    "contentChanged": true
+    "sha256": "d31ec75c073cd3e8a1aeeaadf001235b89e5fdb345a04719bf65c98e10178c68"
   },
   "blacksmithing": {
     "url": "https://www.wow-professions.com/forever/blacksmithing-leveling-guide",
     "checked": "2026-11-27",
-    "sha256": "e056f24568ed78130ead5f62a909a448ef9a9005ea3345d3e46121cc22bd8383",
-    "contentChanged": true
+    "sha256": "f53143748ebe6f045aec6ac58d9d83f91de4c6f646ba1e9650c6bf53cd56f12d"
   },
   "enchanting": {
     "url": "https://www.wow-professions.com/forever/enchanting-leveling-guide",
     "checked": "2026-11-27",
-    "sha256": "82645c9327a25697fe6126de238ce0b23a1cef53c5986a9b6e2e379dd2c45f60",
-    "contentChanged": false
+    "sha256": "dbf5b7f30c7bbc4635c5f30f50c466c761177a8ee86a287f370016560109275f"
   },
   "engineering": {
     "url": "https://www.wow-professions.com/forever/engineering-leveling-guide",
     "checked": "2026-11-27",
-    "sha256": "0a2c4e6ce2a3ce097c46e66e0032c9141b45a002d89c4aff60a305632de61f33",
-    "contentChanged": false
+    "sha256": "daef85d80ee80280477459405dea1bb747c9b781dd00c6c4c4c7884305c0305e"
   },
   "leatherworking": {
     "url": "https://www.wow-professions.com/forever/leatherworking-leveling-guide",
     "checked": "2026-11-27",
-    "sha256": "fb7ee662c696166ab7e3735bdf0e59c65179040ecb19de5c6924a5f096583823",
-    "contentChanged": false
+    "sha256": "193f0504829953463de3822f3effae142ae9cd8cf68f8818c6aeaf57100a8d57"
   },
   "tailoring": {
     "url": "https://www.wow-professions.com/forever/tailoring-leveling-guide",
     "checked": "2026-11-27",
-    "sha256": "d9ba1e005a8e29bbc73e28382323f35e414ac0afd123d115dce0f08007efea32",
-    "contentChanged": false
+    "sha256": "f17f63a35bd7414e12226469d7cebcb0984de57654334cd0558753a53fd9bdfb"
   },
   "first-aid": {
     "url": "https://www.wow-professions.com/forever/first-aid-leveling-guide",
     "checked": "2026-11-27",
-    "sha256": "96a666d7cd25c9a2334a37f213132040c487e3f10d30046ab6be01e145ad380d",
-    "contentChanged": false
+    "sha256": "86c40c0214e5e1cfc2ec4d9b6b45d75c0df92b39717fd2e17b00c5118b713fda"
   },
   "cooking": {
     "url": "https://www.wow-professions.com/forever/cooking-leveling-guide",
     "checked": "2026-11-27",
-    "sha256": "51aaa5bd9253bd1a356de758dc7674b6d1d4f1fa430ab5b99becf79986473d61",
-    "contentChanged": true
+    "sha256": "8e6fbf6039e32f3ca7956d29e2f454459b74b25f7586f0c12214fd8de26322fe"
   },
   "mining": {
     "url": "https://www.wow-professions.com/forever/mining-leveling-guide",
     "checked": "2026-11-27",
-    "sha256": "d8719f6c848ee5854f1fe4c02248b7391672dc981d03e4305c4524f5133e909b",
-    "contentChanged": false
+    "sha256": "ac84f7e224410b37a68ee4163ee1963c4fa7273d519c966a43aba6b41e926840"
   },
   "herbalism": {
     "url": "https://www.wow-professions.com/forever/herbalism-leveling-guide",
     "checked": "2026-11-27",
-    "sha256": "1c0615074c56145ea52db8f57fd3293bcec4cb0064631bf8a6107b07356d0e72",
-    "contentChanged": false
+    "sha256": "9e666598b6f2674b34b2b522792c0ce71737d499b049424ebf4a31e84b5fa473"
   },
   "skinning": {
     "url": "https://www.wow-professions.com/forever/skinning-leveling-guide",
     "checked": "2026-11-27",
-    "sha256": "5a1f32994a4bba0a7c3cad606a3a906710cddb3975e6d3e1d726f64913a8db13",
-    "contentChanged": true
+    "sha256": "ce57ed4610fd38641ed77b474d209e40d2aa69d1b32ac404e6a1ceaff7036c72"
   },
   "fishing": {
     "url": "https://www.wow-professions.com/forever/fishing-leveling-guide",
     "checked": "2026-11-27",
-    "sha256": "07a2c4187c71dcbd852aaa65c3a73fcb40d658474750699d66bb743ca6c224a0",
-    "contentChanged": false
+    "sha256": "22ba0fd4737d536fe865392674aef68f2048e16831d099f303955efc6f0180aa"
   },
   "lockpicking": {
     "url": "https://www.wow-professions.com/forever/lockpicking-leveling-guide",
     "checked": "2026-11-27",
-    "sha256": "3a55d0b0a32ea9eb39abb6c05f450d1614fbb4533c67b8e95420033e422a9a47",
-    "contentChanged": false
+    "sha256": "7d9e698146ed16647df0910af863b6132816b492471183ef2f43baa9c0d155d9"
   }
 }
